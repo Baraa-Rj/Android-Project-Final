@@ -13,3 +13,21 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Python Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+.venv
+env/
+venv/
+ENV/
+backend/__pycache__/
+backend/.env
+*.db
+*.sqlite3
+.pytest_cache/
+.coverage
+htmlcov/
