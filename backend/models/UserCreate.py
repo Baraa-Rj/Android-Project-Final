@@ -1,9 +1,9 @@
 from pydantic import BaseModel
+from typing import Optional
+
 
 class UserCreate(BaseModel):
-    username: str
+    name: str
     email: str
-    password: str
     phone: str
-    role: str
-    
+    role: str  # customer, employee, manager
