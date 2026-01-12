@@ -64,10 +64,10 @@ def get_current_user(
             )
 
         return CurrentUser(
-            id=user["id"],
-            email=user["email"],
-            role=user["role"],
-            name=user["name"]
+            id=user["id"], #type: ignore[index] 
+            email=user["email"], #type: ignore[index]
+            role=user["role"], #type: ignore[index]
+            name=user["name"] #type: ignore[index]
         )
     finally:
         cursor.close()

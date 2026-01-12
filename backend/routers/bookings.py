@@ -21,7 +21,7 @@ def check_booking_ownership(booking_id: int, current_user: CurrentUser):
             booking = cursor.fetchone()
             if not booking:
                 raise HTTPException(status_code=404, detail="Booking not found")
-            if booking["user_id"] != current_user.id:
+            if booking["user_id"] != current_user.id: # type: ignore[index]
                 raise HTTPException(
                     status_code=403,
                     detail="Access denied. You can only access your own bookings"
@@ -290,7 +290,7 @@ def get_bookings_by_car(
             car = cursor.fetchone()
             if not car:
                 raise HTTPException(status_code=404, detail="Car not found")
-            if car["user_id"] != current_user.id:
+            if car["user_id"] != current_user.id: # type: ignore[index]
                 raise HTTPException(
                     status_code=403,
                     detail="Access denied. You can only access bookings for your own cars"
