@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import users, cars, services, bookings, teams
+from routers import users, cars, services, bookings, teams, authentication
 
 app = FastAPI(title="Car Wash API", version="1.0.0")
 
@@ -13,6 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(authentication.router)
 app.include_router(users.router)
 app.include_router(cars.router)
 app.include_router(services.router)
