@@ -1,16 +1,56 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 import mysql.connector
 from models.BookingCreate import BookingCreate
 from database import get_db_connection
+from dependencies import CurrentUser, get_current_user, get_employee_or_manager
 
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
 
 
+def check_booking_ownership(booking_id: int, current_user: CurrentUser):
+    """
+    Check if customer owns the booking
+    - Customers: must own the booking
+    - Employees/Managers: can access any booking
+    """
+    if current_user.role == "customer":
+        db = get_db_connection()
+        cursor = db.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT user_id FROM bookings WHERE id = %s", (booking_id,))
+            booking = cursor.fetchone()
+            if not booking:
+                raise HTTPException(status_code=404, detail="Booking not found")
+            if booking["user_id"] != current_user.id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Access denied. You can only access your own bookings"
+                )
+        finally:
+            cursor.close()
+            db.close()
+
+
 @router.get("")
-def get_bookings():
+def get_bookings(current_user: CurrentUser = Depends(get_current_user)):
+    """
+    Get all bookings
+    - Customers: Only see their own bookings
+    - Employees/Managers: See all bookings
+    """
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM bookings ORDER BY scheduled_time DESC")
+
+    if current_user.role == "customer":
+        # Customers can only see their own bookings
+        cursor.execute(
+            "SELECT * FROM bookings WHERE user_id = %s ORDER BY scheduled_time DESC",
+            (current_user.id,)
+        )
+    else:
+        # Employees and managers see all bookings
+        cursor.execute("SELECT * FROM bookings ORDER BY scheduled_time DESC")
+
     bookings = cursor.fetchall()
     cursor.close()
     db.close()
@@ -18,7 +58,18 @@ def get_bookings():
 
 
 @router.get("/user/{user_id}")
-def get_user_bookings(user_id: int):
+def get_user_bookings(
+    user_id: int,
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Get bookings for a user - Customers can only access their own bookings"""
+    # Customers can only access their own bookings
+    if current_user.role == "customer" and current_user.id != user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied. You can only access your own bookings"
+        )
+
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
@@ -32,13 +83,28 @@ def get_user_bookings(user_id: int):
 
 
 @router.post("")
-def create_booking(booking: BookingCreate):
+def create_booking(
+    booking: BookingCreate,
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """
+    Create a new booking
+    - Customers: Can only create bookings for themselves
+    - Employees/Managers: Can create bookings for any user
+    """
+    # Customers can only create bookings for themselves
+    if current_user.role == "customer" and booking.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied. You can only create bookings for yourself"
+        )
+
     db = get_db_connection()
     cursor = db.cursor()
     try:
         cursor.execute(
-            """INSERT INTO bookings (user_id, car_id, service_id, team_id, vehicle_id, 
-            location, location_lat, location_lng, scheduled_time, total_price, notes) 
+            """INSERT INTO bookings (user_id, car_id, service_id, team_id, vehicle_id,
+            location, location_lat, location_lng, scheduled_time, total_price, notes)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
             (
                 booking.user_id,
@@ -66,7 +132,13 @@ def create_booking(booking: BookingCreate):
 
 
 @router.get("/{booking_id}")
-def get_booking(booking_id: int):
+def get_booking(
+    booking_id: int,
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Get booking by ID - Customers can only access their own bookings"""
+    check_booking_ownership(booking_id, current_user)
+
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM bookings WHERE id = %s", (booking_id,))
@@ -79,13 +151,20 @@ def get_booking(booking_id: int):
 
 
 @router.put("/{booking_id}")
-def edit_booking(booking_id: int, booking: BookingCreate):
+def edit_booking(
+    booking_id: int,
+    booking: BookingCreate,
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Update booking by ID - Customers can only update their own bookings"""
+    check_booking_ownership(booking_id, current_user)
+
     db = get_db_connection()
     cursor = db.cursor()
     try:
         cursor.execute(
-            """UPDATE bookings SET user_id = %s, car_id = %s, service_id = %s, team_id = %s, vehicle_id = %s, 
-            location = %s, location_lat = %s, location_lng = %s, scheduled_time = %s, total_price = %s, notes = %s 
+            """UPDATE bookings SET user_id = %s, car_id = %s, service_id = %s, team_id = %s, vehicle_id = %s,
+            location = %s, location_lat = %s, location_lng = %s, scheduled_time = %s, total_price = %s, notes = %s
             WHERE id = %s""",
             (
                 booking.user_id,
@@ -115,7 +194,13 @@ def edit_booking(booking_id: int, booking: BookingCreate):
 
 
 @router.delete("/{booking_id}")
-def delete_booking(booking_id: int):
+def delete_booking(
+    booking_id: int,
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Delete booking by ID - Customers can only delete their own bookings"""
+    check_booking_ownership(booking_id, current_user)
+
     db = get_db_connection()
     cursor = db.cursor()
     try:
@@ -133,7 +218,11 @@ def delete_booking(booking_id: int):
 
 
 @router.get("/service/{service_id}")
-def get_bookings_by_service(service_id: int):
+def get_bookings_by_service(
+    service_id: int,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Get bookings by service - Requires employee or manager role"""
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
@@ -147,7 +236,11 @@ def get_bookings_by_service(service_id: int):
 
 
 @router.get("/team/{team_id}")
-def get_bookings_by_team(team_id: int):
+def get_bookings_by_team(
+    team_id: int,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Get bookings by team - Requires employee or manager role"""
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
@@ -161,7 +254,11 @@ def get_bookings_by_team(team_id: int):
 
 
 @router.get("/vehicle/{vehicle_id}")
-def get_bookings_by_vehicle(vehicle_id: int):
+def get_bookings_by_vehicle(
+    vehicle_id: int,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Get bookings by vehicle - Requires employee or manager role"""
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
@@ -175,7 +272,33 @@ def get_bookings_by_vehicle(vehicle_id: int):
 
 
 @router.get("/car/{car_id}")
-def get_bookings_by_car(car_id: int):
+def get_bookings_by_car(
+    car_id: int,
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """
+    Get bookings by car
+    - Customers: Can only access bookings for their own cars
+    - Employees/Managers: Can access all car bookings
+    """
+    # For customers, verify car ownership
+    if current_user.role == "customer":
+        db = get_db_connection()
+        cursor = db.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT user_id FROM cars WHERE id = %s", (car_id,))
+            car = cursor.fetchone()
+            if not car:
+                raise HTTPException(status_code=404, detail="Car not found")
+            if car["user_id"] != current_user.id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Access denied. You can only access bookings for your own cars"
+                )
+        finally:
+            cursor.close()
+            db.close()
+
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
@@ -189,7 +312,11 @@ def get_bookings_by_car(car_id: int):
 
 
 @router.get("/scheduled/{scheduled_time}")
-def get_bookings_by_scheduled_time(scheduled_time: str):
+def get_bookings_by_scheduled_time(
+    scheduled_time: str,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Get bookings by scheduled time - Requires employee or manager role"""
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
@@ -203,7 +330,11 @@ def get_bookings_by_scheduled_time(scheduled_time: str):
 
 
 @router.get("/location/{location}")
-def get_bookings_by_location(location: str):
+def get_bookings_by_location(
+    location: str,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Get bookings by location - Requires employee or manager role"""
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
@@ -217,7 +348,11 @@ def get_bookings_by_location(location: str):
 
 
 @router.get("/total_price/{total_price}")
-def get_bookings_by_total_price(total_price: float):
+def get_bookings_by_total_price(
+    total_price: float,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Get bookings by total price - Requires employee or manager role"""
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
@@ -231,7 +366,11 @@ def get_bookings_by_total_price(total_price: float):
 
 
 @router.get("/notes/{notes}")
-def get_bookings_by_notes(notes: str):
+def get_bookings_by_notes(
+    notes: str,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Get bookings by notes - Requires employee or manager role"""
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
@@ -245,7 +384,12 @@ def get_bookings_by_notes(notes: str):
 
 
 @router.get("/all/{field}/{value}")
-def get_bookings_by_field(field: str, value: str):
+def get_bookings_by_field(
+    field: str,
+    value: str,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Get bookings by field - Requires employee or manager role"""
     valid_fields = {
         "user_id",
         "car_id",

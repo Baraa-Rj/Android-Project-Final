@@ -1,11 +1,18 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from database import get_db_connection
+from dependencies import (
+    CurrentUser,
+    get_current_user,
+    get_employee_or_manager,
+    get_manager
+)
 
 router = APIRouter(prefix="/api/teams", tags=["teams"])
 
 
 @router.get("")
-def get_teams():
+def get_teams(current_user: CurrentUser = Depends(get_current_user)):
+    """Get all teams - Available to all authenticated users"""
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM teams")
@@ -15,8 +22,45 @@ def get_teams():
     return teams
 
 
+@router.get("/{team_id}")
+def get_team(
+    team_id: int,
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Get team by ID - Available to all authenticated users"""
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM teams WHERE id = %s", (team_id,))
+    team = cursor.fetchone()
+    cursor.close()
+    db.close()
+    return team
+
+
+@router.get("/{team_id}/members")
+def get_team_members(
+    team_id: int,
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    """Get team members - Available to all authenticated users"""
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT users.id, users.name, users.email, users.phone, users.role FROM users JOIN team_members ON users.id = team_members.user_id WHERE team_members.team_id = %s",
+        (team_id,),
+    )
+    members = cursor.fetchall()
+    cursor.close()
+    db.close()
+    return members
+
+
 @router.post("")
-def create_team(team: dict):
+def create_team(
+    team: dict,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Create a new team - Requires employee or manager role"""
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute(
@@ -30,19 +74,13 @@ def create_team(team: dict):
     return {"id": team_id, **team}
 
 
-@router.get("/{team_id}")
-def get_team(team_id: int):
-    db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM teams WHERE id = %s", (team_id,))
-    team = cursor.fetchone()
-    cursor.close()
-    db.close()
-    return team
-
-
 @router.put("/{team_id}")
-def edit_team(team_id: int, team: dict):
+def edit_team(
+    team_id: int,
+    team: dict,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Update team - Requires employee or manager role"""
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute(
@@ -56,7 +94,11 @@ def edit_team(team_id: int, team: dict):
 
 
 @router.delete("/{team_id}")
-def delete_team(team_id: int):
+def delete_team(
+    team_id: int,
+    current_user: CurrentUser = Depends(get_manager)
+):
+    """Delete team - Requires manager role"""
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute("DELETE FROM teams WHERE id = %s", (team_id,))
@@ -66,22 +108,13 @@ def delete_team(team_id: int):
     return {"detail": "Team deleted successfully"}
 
 
-@router.get("/{team_id}/members")
-def get_team_members(team_id: int):
-    db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute(
-        "SELECT users.* FROM users JOIN team_members ON users.id = team_members.user_id WHERE team_members.team_id = %s",
-        (team_id,),
-    )
-    members = cursor.fetchall()
-    cursor.close()
-    db.close()
-    return members
-
-
 @router.post("/{team_id}/members")
-def add_team_member(team_id: int, member: dict):
+def add_team_member(
+    team_id: int,
+    member: dict,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Add member to team - Requires employee or manager role"""
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute(
@@ -95,7 +128,12 @@ def add_team_member(team_id: int, member: dict):
 
 
 @router.delete("/{team_id}/members/{user_id}")
-def remove_team_member(team_id: int, user_id: int):
+def remove_team_member(
+    team_id: int,
+    user_id: int,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Remove member from team - Requires employee or manager role"""
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute(
