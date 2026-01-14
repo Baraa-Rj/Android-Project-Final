@@ -19,5 +19,8 @@
         "editor.codeActionsOnSave": {
             "source.organizeImports": "explicit"
         }
+    },
+    "[xml]": {
+        "editor.defaultFormatter": "DotJoshJohnson.xml"
     }
 }
