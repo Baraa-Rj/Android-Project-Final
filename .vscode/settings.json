@@ -9,5 +9,8 @@
             "source.organizeImports": "explicit"
         }
     },
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "[java]": {
+        "editor.defaultFormatter": "redhat.java"
+    }
 }
