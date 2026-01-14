@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.myapplication.R;
 import com.google.android.material.textfield.TextInputEditText;
+import com.example.myapplication.ui.home.HomeFragment;
 
 public class RegisterFragment extends Fragment {
     private AuthViewModel authViewModel;
@@ -53,8 +54,9 @@ public class RegisterFragment extends Fragment {
         authViewModel.getAuthResponseLiveData().observe(getViewLifecycleOwner(), authResponse -> {
             if (authResponse != null) {
                 Toast.makeText(getContext(), "Registration Successful!", Toast.LENGTH_SHORT).show();
-                // Navigate back to login after successful registration
-                navigateToLogin();
+                requireActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new HomeFragment())
+                        .commit();
             }
         });
 
