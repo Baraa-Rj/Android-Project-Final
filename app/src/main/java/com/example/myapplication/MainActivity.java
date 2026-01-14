@@ -6,9 +6,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import com.example.myapplication.data.local.TokenManager;
+
 import com.example.myapplication.ui.home.HomeFragment;
 import com.example.myapplication.ui.auth.LoginFragment;
+import com.example.myapplication.utils.TokenManager;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -97,17 +98,5 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestart() {
         super.onRestart();
         Log.d(TAG, "onRestart: Activity is restarting after being stopped");
-    }
-
-    @Override
-    public void onBackPressed() {
-        // Handle back navigation properly
-        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-            Log.d(TAG, "onBackPressed: Popping fragment from back stack");
-            getSupportFragmentManager().popBackStack();
-        } else {
-            Log.d(TAG, "onBackPressed: Finishing activity");
-            super.onBackPressed();
-        }
     }
 }
