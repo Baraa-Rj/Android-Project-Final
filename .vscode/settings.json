@@ -9,8 +9,15 @@
             "source.organizeImports": "explicit"
         }
     },
-    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.errors.incompleteClasspath.severity": "warning",
+    "java.import.gradle.enabled": true,
+    "java.import.gradle.wrapper.enabled": true,
     "[java]": {
-        "editor.defaultFormatter": "redhat.java"
+        "editor.defaultFormatter": "redhat.java",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
     }
 }

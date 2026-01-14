@@ -52,6 +52,6 @@ public class RegisterRequest {
         return name != null && !name.isEmpty() &&
                 email != null && !email.isEmpty() &&
                 phone != null && !phone.isEmpty() &&
-                password != null && !password.isEmpty() && role != null;
+                password != null && !password.isEmpty();
     }
 }

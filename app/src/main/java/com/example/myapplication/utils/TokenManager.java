@@ -2,6 +2,7 @@ package com.example.myapplication.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import com.example.myapplication.data.models.User;
 
 public class TokenManager {
     private SharedPreferences sharedPreferences;
