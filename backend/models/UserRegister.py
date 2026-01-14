@@ -8,7 +8,7 @@ class UserRegister(BaseModel):
     email: EmailStr = Field(..., description="User's email address")
     phone: str = Field(..., min_length=10, max_length=15, description="User's phone number")
     password: str = Field(..., min_length=8, description="User's password (minimum 8 characters)")
-    role: Optional[str] = Field(default="customer", pattern="^(customer|employee|manager)$", description="User role")
+    role: str = Field(default="customer", pattern="^(customer|employee|manager)$", description="User role")
 
     @field_validator("name")
     @classmethod

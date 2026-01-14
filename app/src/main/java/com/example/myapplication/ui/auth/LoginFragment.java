@@ -1,6 +1,8 @@
 package com.example.myapplication.ui.auth;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,43 +18,157 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.example.myapplication.ui.home.HomeFragment;
 
 public class LoginFragment extends Fragment {
+    private static final String TAG = "LoginFragment";
+    private static final String KEY_EMAIL = "key_email";
+    private static final String KEY_PASSWORD = "key_password";
+
     private AuthViewModel authViewModel;
     private TextInputEditText emailEditText;
     private TextInputEditText passwordEditText;
     private Button loginButton;
     private TextView registerTextView;
 
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        Log.d(TAG, "onAttach: Fragment attached to activity");
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate: Fragment is being created");
+        // Initialize ViewModel early to survive configuration changes
+        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "onCreateView: Creating fragment view");
         View view = inflater.inflate(R.layout.fragment_login, container, false);
         initializeUIElements(view);
         return view;
-
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-        loginButton.setOnClickListener(v -> {
-            attemptLogin();
-        });
-        registerTextView.setOnClickListener(v -> {
-            navigateToRegister();
-        });
+        Log.d(TAG, "onViewCreated: View hierarchy created");
+
+        setupClickListeners();
+        observeViewModel();
+
+        // Restore saved state if available
+        if (savedInstanceState != null) {
+            restoreInstanceState(savedInstanceState);
+        }
+    }
+
+    private void setupClickListeners() {
+        loginButton.setOnClickListener(v -> attemptLogin());
+        registerTextView.setOnClickListener(v -> navigateToRegister());
+    }
+
+    private void observeViewModel() {
         authViewModel.getAuthResponseLiveData().observe(getViewLifecycleOwner(), authResponse -> {
             if (authResponse != null) {
+                Log.d(TAG, "Login successful for user: " + authResponse.getEmail());
                 Toast.makeText(getContext(), "Login Successful!", Toast.LENGTH_SHORT).show();
                 requireActivity().getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, new HomeFragment())
                         .commit();
             }
         });
+
         authViewModel.getErrorLiveData().observe(getViewLifecycleOwner(), errorMessage -> {
-            Toast.makeText(getContext(), "Error: " + errorMessage, Toast.LENGTH_SHORT).show();
+            if (errorMessage != null) {
+                Log.e(TAG, "Login error: " + errorMessage);
+                Toast.makeText(getContext(), "Error: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
         });
+
+        authViewModel.getLoadingLiveData().observe(getViewLifecycleOwner(), isLoading -> {
+            // Disable button during loading to prevent multiple submissions
+            loginButton.setEnabled(!isLoading);
+            Log.d(TAG, "Loading state: " + isLoading);
+        });
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart: Fragment is becoming visible");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume: Fragment is now interactive");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause: Fragment is losing focus");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.d(TAG, "onStop: Fragment is no longer visible");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Log.d(TAG, "onDestroyView: Fragment view is being destroyed");
+        // Clean up view references to prevent memory leaks
+        emailEditText = null;
+        passwordEditText = null;
+        loginButton = null;
+        registerTextView = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy: Fragment is being destroyed");
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        Log.d(TAG, "onDetach: Fragment detached from activity");
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.d(TAG, "onSaveInstanceState: Saving fragment state");
+
+        // Save input fields to survive configuration changes
+        if (emailEditText != null && emailEditText.getText() != null) {
+            outState.putString(KEY_EMAIL, emailEditText.getText().toString());
+        }
+        if (passwordEditText != null && passwordEditText.getText() != null) {
+            outState.putString(KEY_PASSWORD, passwordEditText.getText().toString());
+        }
+    }
+
+    private void restoreInstanceState(@NonNull Bundle savedInstanceState) {
+        Log.d(TAG, "restoreInstanceState: Restoring fragment state");
+
+        String savedEmail = savedInstanceState.getString(KEY_EMAIL);
+        String savedPassword = savedInstanceState.getString(KEY_PASSWORD);
+
+        if (savedEmail != null && emailEditText != null) {
+            emailEditText.setText(savedEmail);
+        }
+        if (savedPassword != null && passwordEditText != null) {
+            passwordEditText.setText(savedPassword);
+        }
     }
 
     public void initializeUIElements(View view) {
@@ -63,11 +179,27 @@ public class LoginFragment extends Fragment {
     }
 
     private void attemptLogin() {
+        // Clear previous errors
+        emailEditText.setError(null);
+        passwordEditText.setError(null);
+
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
 
-        if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
+        // Client-side validation
+        boolean hasError = false;
+
+        if (email.isEmpty()) {
+            emailEditText.setError("Email is required");
+            hasError = true;
+        }
+
+        if (password.isEmpty()) {
+            passwordEditText.setError("Password is required");
+            hasError = true;
+        }
+
+        if (hasError) {
             return;
         }
 

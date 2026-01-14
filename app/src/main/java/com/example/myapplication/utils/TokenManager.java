@@ -53,4 +53,7 @@ public class TokenManager {
         editor.putString(USER_EMAIL_KEY, user.getEmail());
         editor.apply();
     }
+    public static TokenManager getInstance(Context context) {
+        return new TokenManager(context);
+    }
 }

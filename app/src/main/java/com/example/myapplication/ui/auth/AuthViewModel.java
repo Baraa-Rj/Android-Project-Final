@@ -1,6 +1,7 @@
 package com.example.myapplication.ui.auth;
 
 import android.app.Application;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
@@ -10,19 +11,26 @@ import com.example.myapplication.data.models.LoginRequest;
 import com.example.myapplication.data.models.RegisterRequest;
 import com.example.myapplication.data.repository.AuthRepo;
 import com.example.myapplication.utils.TokenManager;
+import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class AuthViewModel extends AndroidViewModel {
+    private static final String TAG = "AuthViewModel";
+
     private final AuthRepo authRepo;
     private final TokenManager tokenManager;
     private final MutableLiveData<AuthResponse> authResponseLiveData = new MutableLiveData<>();
     private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> loadingLiveData = new MutableLiveData<>(false);
 
+    // Keep track of ongoing calls for cleanup
+    private Call<AuthResponse> currentCall;
+
     public AuthViewModel(@NonNull Application application) {
         super(application);
+        Log.d(TAG, "AuthViewModel: Initializing ViewModel");
         this.authRepo = new AuthRepo(application);
         this.tokenManager = new TokenManager(application);
     }
@@ -39,68 +47,147 @@ public class AuthViewModel extends AndroidViewModel {
         return loadingLiveData;
     }
 
+    private String parseErrorMessage(Response<?> response) {
+        try {
+            if (response.errorBody() != null) {
+                String errorBody = response.errorBody().string();
+                JSONObject errorJson = new JSONObject(errorBody);
+
+                // Check if it has a "detail" field
+                if (errorJson.has("detail")) {
+                    String detail = errorJson.getString("detail");
+
+                    // Make error messages more user-friendly
+                    if (detail.contains("Email already registered")) {
+                        return "This email is already registered. Please login or use a different email.";
+                    } else if (detail.contains("Incorrect email or password")) {
+                        return "Incorrect email or password. Please try again.";
+                    } else {
+                        return detail;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Fallback to HTTP status messages
+        switch (response.code()) {
+            case 400:
+                return "Invalid request. Please check your input.";
+            case 401:
+                return "Incorrect email or password.";
+            case 422:
+                return "Please check your input and try again.";
+            case 500:
+                return "Server error. Please try again later.";
+            default:
+                return "Something went wrong. Please try again.";
+        }
+    }
+
     public void login(String email, String password) {
+        Log.d(TAG, "login: Attempting login for email: " + email);
         loadingLiveData.setValue(true);
         LoginRequest request = new LoginRequest(email, password);
-        authRepo.loginUser(request).enqueue(new Callback<AuthResponse>() {
+        currentCall = authRepo.loginUser(request);
+        currentCall.enqueue(new Callback<AuthResponse>() {
             @Override
             public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
                 loadingLiveData.setValue(false);
                 if (response.isSuccessful() && response.body() != null) {
                     AuthResponse authResponse = response.body();
+                    Log.d(TAG, "login: Login successful for user: " + authResponse.getEmail());
                     tokenManager.saveToken(
                         authResponse.getToken(),
-                        authResponse.getUser().getId(),
-                        authResponse.getUser().getEmail()
+                        authResponse.getId(),
+                        authResponse.getEmail()
                     );
                     authResponseLiveData.setValue(authResponse);
                 } else {
-                    errorLiveData.setValue("Login failed: " + response.message());
+                    String errorMsg = parseErrorMessage(response);
+                    Log.e(TAG, "login: Login failed: " + errorMsg);
+                    errorLiveData.setValue(errorMsg);
                 }
+                currentCall = null;
             }
 
             @Override
             public void onFailure(Call<AuthResponse> call, Throwable t) {
                 loadingLiveData.setValue(false);
-                errorLiveData.setValue("Login failed: " + t.getMessage());
+                String errorMessage = "Connection failed. Please check your internet connection.";
+                if (t.getMessage() != null && t.getMessage().contains("Unable to resolve host")) {
+                    errorMessage = "Cannot connect to server. Please check your connection.";
+                }
+                Log.e(TAG, "login: Network failure: " + t.getMessage());
+                errorLiveData.setValue(errorMessage);
+                currentCall = null;
             }
         });
     }
 
     public void register(String name, String email, String phone, String password) {
+        Log.d(TAG, "register: Attempting registration for email: " + email);
         loadingLiveData.setValue(true);
         RegisterRequest request = new RegisterRequest(name, email, phone, password);
-        authRepo.registerUser(request).enqueue(new Callback<AuthResponse>() {
+        currentCall = authRepo.registerUser(request);
+        currentCall.enqueue(new Callback<AuthResponse>() {
             @Override
             public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
                 loadingLiveData.setValue(false);
                 if (response.isSuccessful() && response.body() != null) {
                     AuthResponse authResponse = response.body();
+                    Log.d(TAG, "register: Registration successful for user: " + authResponse.getEmail());
                     tokenManager.saveToken(
                         authResponse.getToken(),
-                        authResponse.getUser().getId(),
-                        authResponse.getUser().getEmail()
+                        authResponse.getId(),
+                        authResponse.getEmail()
                     );
                     authResponseLiveData.setValue(authResponse);
                 } else {
-                    errorLiveData.setValue("Registration failed: " + response.message());
+                    String errorMsg = parseErrorMessage(response);
+                    Log.e(TAG, "register: Registration failed: " + errorMsg);
+                    errorLiveData.setValue(errorMsg);
                 }
+                currentCall = null;
             }
 
             @Override
             public void onFailure(Call<AuthResponse> call, Throwable t) {
                 loadingLiveData.setValue(false);
-                errorLiveData.setValue("Registration failed: " + t.getMessage());
+                String errorMessage = "Connection failed. Please check your internet connection.";
+                if (t.getMessage() != null && t.getMessage().contains("Unable to resolve host")) {
+                    errorMessage = "Cannot connect to server. Please check your connection.";
+                }
+                Log.e(TAG, "register: Network failure: " + t.getMessage());
+                errorLiveData.setValue(errorMessage);
+                currentCall = null;
             }
         });
     }
 
     public void logout() {
+        Log.d(TAG, "logout: Clearing user token");
         tokenManager.clearToken();
     }
 
     public boolean isLoggedIn() {
-        return tokenManager.isLoggedIn();
+        boolean loggedIn = tokenManager.isLoggedIn();
+        Log.d(TAG, "isLoggedIn: " + loggedIn);
+        return loggedIn;
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        Log.d(TAG, "onCleared: ViewModel is being cleared");
+
+        // Cancel any ongoing network calls to prevent memory leaks
+        if (currentCall != null && !currentCall.isCanceled()) {
+            Log.d(TAG, "onCleared: Canceling ongoing network call");
+            currentCall.cancel();
+            currentCall = null;
+        }
     }
 
 }
