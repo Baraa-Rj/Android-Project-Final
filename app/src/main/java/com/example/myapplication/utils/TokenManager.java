@@ -10,9 +10,6 @@ public class TokenManager {
     private static final String USER_ID_KEY = "user_id";
     private static final String USER_EMAIL_KEY = "user_email";
 
-    public TokenManager() {
-    }
-
     public TokenManager(Context context) {
         this.sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
     }
@@ -47,5 +44,12 @@ public class TokenManager {
 
     public boolean isLoggedIn() {
         return getToken() != null;
+    }
+
+    public void saveUser(User user) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(USER_ID_KEY, user.getId());
+        editor.putString(USER_EMAIL_KEY, user.getEmail());
+        editor.apply();
     }
 }

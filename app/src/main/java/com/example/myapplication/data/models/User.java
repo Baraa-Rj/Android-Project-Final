@@ -1,7 +1,5 @@
 package com.example.myapplication.data.models;
 
-import java.io.Serial;
-
 import com.google.gson.annotations.SerializedName;
 
 public class User {
