@@ -16,6 +16,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Add JCenter as fallback (read-only)
+        maven { url = uri("https://jcenter.bintray.com") }
     }
 }
 
