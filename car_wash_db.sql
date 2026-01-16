@@ -200,7 +200,8 @@ DROP TABLE IF EXISTS `teams`;
 CREATE TABLE `teams` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `employee_id` int DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `employee_id` int DEFAULT NULL COMMENT 'Team lead',
   `status` enum('available','busy','offline') COLLATE utf8mb4_unicode_ci DEFAULT 'available',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -217,8 +218,39 @@ CREATE TABLE `teams` (
 
 LOCK TABLES `teams` WRITE;
 /*!40000 ALTER TABLE `teams` DISABLE KEYS */;
-INSERT INTO `teams` VALUES (1,'Team Alpha',3,'available','2026-01-11 11:37:41','2026-01-11 11:37:41'),(2,'Team Beta',4,'available','2026-01-11 11:37:41','2026-01-11 11:37:41'),(3,'Team Gamma',NULL,'offline','2026-01-11 11:37:41','2026-01-11 11:37:41'),(4,'Team Delta',9,'available','2026-01-11 11:40:07','2026-01-11 11:40:07'),(5,'Team Echo',10,'busy','2026-01-11 11:40:07','2026-01-11 11:40:07'),(6,'Team Foxtrot',NULL,'available','2026-01-11 11:40:07','2026-01-11 11:40:07');
+INSERT INTO `teams` VALUES (1,'Team Alpha','Specializes in VIP and premium washes',3,'available','2026-01-11 11:37:41','2026-01-11 11:37:41'),(2,'Team Beta','Expert in steam cleaning services',4,'available','2026-01-11 11:37:41','2026-01-11 11:37:41'),(3,'Team Gamma','General washing team',NULL,'offline','2026-01-11 11:37:41','2026-01-11 11:37:41'),(4,'Team Delta','Full detailing specialists',9,'available','2026-01-11 11:40:07','2026-01-11 11:40:07'),(5,'Team Echo','Interior cleaning experts',10,'busy','2026-01-11 11:40:07','2026-01-11 11:40:07'),(6,'Team Foxtrot','Quick wash team',NULL,'available','2026-01-11 11:40:07','2026-01-11 11:40:07');
 /*!40000 ALTER TABLE `teams` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `team_members`
+--
+
+DROP TABLE IF EXISTS `team_members`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `team_members` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `team_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_team_user` (`team_id`, `user_id`),
+  KEY `team_id` (`team_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `team_members_ibfk_1` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `team_members_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `team_members`
+--
+
+LOCK TABLES `team_members` WRITE;
+/*!40000 ALTER TABLE `team_members` DISABLE KEYS */;
+INSERT INTO `team_members` VALUES (1,1,3,'2026-01-11 11:40:07'),(2,2,4,'2026-01-11 11:40:07'),(3,4,9,'2026-01-11 11:40:07'),(4,5,10,'2026-01-11 11:40:07');
+/*!40000 ALTER TABLE `team_members` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

@@ -11,6 +11,7 @@ import com.example.myapplication.data.models.LoginRequest;
 import com.example.myapplication.data.models.RegisterRequest;
 import com.example.myapplication.data.repository.AuthRepo;
 import com.example.myapplication.utils.TokenManager;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -55,20 +56,59 @@ public class AuthViewModel extends AndroidViewModel {
 
                 // Check if it has a "detail" field
                 if (errorJson.has("detail")) {
-                    String detail = errorJson.getString("detail");
+                    Object detail = errorJson.get("detail");
 
-                    // Make error messages more user-friendly
-                    if (detail.contains("Email already registered")) {
-                        return "This email is already registered. Please login or use a different email.";
-                    } else if (detail.contains("Incorrect email or password")) {
-                        return "Incorrect email or password. Please try again.";
-                    } else {
-                        return detail;
+                    // Handle array format (validation errors from FastAPI)
+                    if (detail instanceof JSONArray) {
+                        JSONArray detailArray = (JSONArray) detail;
+                        if (detailArray.length() > 0) {
+                            JSONObject firstError = detailArray.getJSONObject(0);
+                            String field = "";
+                            String message = "";
+
+                            // Get the field name from "loc" array
+                            if (firstError.has("loc")) {
+                                JSONArray loc = firstError.getJSONArray("loc");
+                                if (loc.length() > 1) {
+                                    field = loc.getString(loc.length() - 1);
+                                }
+                            }
+
+                            // Get the error message
+                            if (firstError.has("msg")) {
+                                message = firstError.getString("msg");
+                            }
+
+                            // Return user-friendly messages based on field and error
+                            if (field.equals("email")) {
+                                if (message.contains("not a valid email")) {
+                                    return "Please enter a valid email address.";
+                                }
+                                return "Invalid email: " + message;
+                            } else if (field.equals("password")) {
+                                return "Invalid password: " + message;
+                            } else if (!message.isEmpty()) {
+                                return message;
+                            }
+                        }
+                    }
+                    // Handle string format (custom error messages)
+                    else if (detail instanceof String) {
+                        String detailStr = (String) detail;
+
+                        // Make error messages more user-friendly
+                        if (detailStr.contains("Email already registered")) {
+                            return "This email is already registered. Please login or use a different email.";
+                        } else if (detailStr.contains("Incorrect email or password")) {
+                            return "Incorrect email or password. Please try again.";
+                        } else {
+                            return detailStr;
+                        }
                     }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "parseErrorMessage: Failed to parse error", e);
         }
 
         // Fallback to HTTP status messages

@@ -3,6 +3,7 @@ package com.example.myapplication.ui.auth;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -191,6 +192,9 @@ public class LoginFragment extends Fragment {
 
         if (email.isEmpty()) {
             emailEditText.setError("Email is required");
+            hasError = true;
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailEditText.setError("Please enter a valid email address");
             hasError = true;
         }
 

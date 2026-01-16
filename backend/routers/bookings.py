@@ -217,6 +217,70 @@ def delete_booking(
     return {"detail": "Booking deleted successfully"}
 
 
+@router.patch("/{booking_id}/status")
+def update_booking_status(
+    booking_id: int,
+    body: dict,
+    current_user: CurrentUser = Depends(get_employee_or_manager)
+):
+    """Update booking status - Requires employee or manager role"""
+
+    # Validate status
+    valid_statuses = ["pending", "assigned", "in_progress", "completed", "cancelled"]
+    status = body.get("status")
+
+    if not status:
+        raise HTTPException(status_code=400, detail="Status is required")
+
+    if status not in valid_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+        )
+
+    # Business rule: assigned status requires team_id
+    team_id = body.get("team_id")
+    vehicle_id = body.get("vehicle_id")
+
+    if status == "assigned" and not team_id:
+        raise HTTPException(
+            status_code=400,
+            detail="team_id is required when assigning a booking"
+        )
+
+    db = get_db_connection()
+    cursor = db.cursor()
+    try:
+        # Build query based on status
+        if status == "completed":
+            cursor.execute(
+                "UPDATE bookings SET status = %s, completed_at = NOW() WHERE id = %s",
+                (status, booking_id),
+            )
+        elif status == "assigned":
+            cursor.execute(
+                "UPDATE bookings SET status = %s, team_id = %s, vehicle_id = %s WHERE id = %s",
+                (status, team_id, vehicle_id, booking_id),
+            )
+        else:
+            cursor.execute(
+                "UPDATE bookings SET status = %s WHERE id = %s",
+                (status, booking_id),
+            )
+
+        db.commit()
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Booking not found")
+    except mysql.connector.Error as err:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {err}")
+    finally:
+        cursor.close()
+        db.close()
+
+    return {"id": booking_id, "status": status, "message": f"Booking status updated to {status}"}
+
+
 @router.get("/service/{service_id}")
 def get_bookings_by_service(
     service_id: int,
