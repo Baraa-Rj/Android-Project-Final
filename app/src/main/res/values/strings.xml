@@ -14,4 +14,12 @@
     <string name="wallet_balance">Wallet Balance</string>
     <string name="_0_00">$0.00</string>
     <string name="quick_actions">Quick Actions</string>
+    <string name="no_services_available">No services available</string>
+    <string name="our_services">Our Services</string>
+    <string name="my_bookings">My Bookings</string>
+    <string name="no_bookings_yet">No bookings yet. Book your first wash!</string>
+    <string name="my_cars">My Cars</string>
+    <string name="wallet">Wallet</string>
+    <string name="notifications">Notifications</string>
+    <string name="logout">Logout</string>
 </resources>

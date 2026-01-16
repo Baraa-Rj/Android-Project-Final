@@ -15,8 +15,9 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.myapplication.R;
+import com.example.myapplication.ui.customer.CustomerActivity;
 import com.google.android.material.textfield.TextInputEditText;
-import com.example.myapplication.ui.home.HomeFragment;
+import android.content.Intent;
 
 public class LoginFragment extends Fragment {
     private static final String TAG = "LoginFragment";
@@ -77,9 +78,16 @@ public class LoginFragment extends Fragment {
             if (authResponse != null) {
                 Log.d(TAG, "Login successful for user: " + authResponse.getEmail());
                 Toast.makeText(getContext(), "Login Successful!", Toast.LENGTH_SHORT).show();
-                requireActivity().getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, new HomeFragment())
-                        .commit();
+
+                // Navigate to CustomerActivity using Intent
+                Intent intent = new Intent(requireContext(), CustomerActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+
+                // Finish MainActivity
+                if (getActivity() != null) {
+                    getActivity().finish();
+                }
             }
         });
 

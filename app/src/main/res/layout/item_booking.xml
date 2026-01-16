@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/card_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header Row: Service Name + Status -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/serviceName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="VIP Wash"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary" />
+
+            <!-- Status Chip -->
+            <TextView
+                android:id="@+id/statusChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pending"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:background="@color/status_pending"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp" />
+
+        </LinearLayout>
+
+        <!-- Car Info -->
+        <TextView
+            android:id="@+id/carInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Toyota Camry"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="8dp"
+            android:drawableStart="@android:drawable/ic_menu_directions"
+            android:drawablePadding="8dp" />
+
+        <!-- Date/Time -->
+        <TextView
+            android:id="@+id/bookingDateTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Jan 16, 2026 - 10:00 AM"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="4dp"
+            android:drawableStart="@android:drawable/ic_menu_my_calendar"
+            android:drawablePadding="8dp" />
+
+        <!-- Location -->
+        <TextView
+            android:id="@+id/bookingLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ramallah, Al-Irsal"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="4dp"
+            android:drawableStart="@android:drawable/ic_menu_mylocation"
+            android:drawablePadding="8dp" />
+
+        <!-- Price -->
+        <TextView
+            android:id="@+id/bookingPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="$25.00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:layout_marginTop="8dp" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

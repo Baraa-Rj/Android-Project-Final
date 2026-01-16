@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/card_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Service Name -->
+        <TextView
+            android:id="@+id/serviceName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Service Name"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <!-- Service Description -->
+        <TextView
+            android:id="@+id/serviceDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Service description goes here"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="4dp" />
+
+        <!-- Duration and Price Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical">
+
+            <!-- Duration -->
+            <TextView
+                android:id="@+id/serviceDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="30 min"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:drawableStart="@android:drawable/ic_menu_recent_history"
+                android:drawablePadding="4dp" />
+
+            <!-- Spacer -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- Price -->
+            <TextView
+                android:id="@+id/servicePrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$25.00"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary" />
+
+        </LinearLayout>
+
+        <!-- Book Now Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/bookButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/book_now"
+            android:layout_marginTop="12dp"
+            app:cornerRadius="8dp" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

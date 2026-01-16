@@ -29,20 +29,22 @@ public class CustomerActivity extends AppCompatActivity {
 
     private void setupBottomNavigation() {
         bottomNavigationView.setOnItemSelectedListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.nav_home:
-                    switchFragment(homeFragment);
-                    return true;
-                case R.id.nav_services:
-                    switchFragment(servicesFragment);
-                    return true;
-                case R.id.nav_bookings:
-                    switchFragment(bookingsFragment);
-                    return true;
-                case R.id.nav_profile:
-                    switchFragment(profileFragment);
-                    return true;
+            int itemId = item.getItemId();
+
+            if (itemId == R.id.nav_home) {
+                switchFragment(homeFragment);
+                return true;
+            } else if (itemId == R.id.nav_services) {
+                switchFragment(servicesFragment);
+                return true;
+            } else if (itemId == R.id.nav_bookings) {
+                switchFragment(bookingsFragment);
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                switchFragment(profileFragment);
+                return true;
             }
+
             return false;
         });
     }

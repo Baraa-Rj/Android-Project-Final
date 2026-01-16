@@ -11,12 +11,14 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.DELETE;
 
+import com.example.myapplication.data.models.Service;
 import com.example.myapplication.data.models.User;
 import com.example.myapplication.data.models.LoginRequest;
 import com.example.myapplication.data.models.RegisterRequest;
 import com.example.myapplication.data.models.AuthResponse;
 import com.example.myapplication.data.models.Car;
 import com.example.myapplication.data.models.CarRequest;
+import com.example.myapplication.data.models.Booking;
 
 public interface ApiService {
     @POST("/api/auth/login")
@@ -39,5 +41,12 @@ public interface ApiService {
 
     @DELETE("/api/cars/{id}")
     Call<Void> deleteCar(@Path("id") int id);
+
+    @GET("api/services")
+    Call<List<Service>> getServices();
+
+    // Bookings
+    @GET("api/bookings")
+    Call<List<Booking>> getBookings();
 
 }

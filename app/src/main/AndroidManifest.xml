@@ -23,6 +23,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Customer Activity with Bottom Navigation -->
+        <activity
+            android:name=".ui.customer.CustomerActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
