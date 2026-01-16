@@ -25,6 +25,7 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -61,7 +62,7 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
         loadCarsCall = apiService.getCars();
         loadCarsCall.enqueue(new Callback<List<Car>>() {
             @Override
-            public void onResponse(@NonNull Call<List<Car>> call, Response<List<Car>> response) {
+            public void onResponse(@NonNull Call<List<Car>> call, @NonNull Response<List<Car>> response) {
                 if (isFinishing() || isDestroyed()) return;
                 if (response.isSuccessful() && response.body() != null) {
                     carList.clear();
@@ -176,10 +177,10 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
         cancelButton.setOnClickListener(v -> dialog.dismiss());
 
         addButton.setOnClickListener(v -> {
-            String model = modelEditText.getText().toString().trim();
-            String plateNumber = plateNumberEditText.getText().toString().trim();
-            String color = colorEditText.getText().toString().trim();
-            String yearStr = yearEditText.getText().toString().trim();
+            String model = Objects.requireNonNull(modelEditText.getText()).toString().trim();
+            String plateNumber = Objects.requireNonNull(plateNumberEditText.getText()).toString().trim();
+            String color = Objects.requireNonNull(colorEditText.getText()).toString().trim();
+            String yearStr = Objects.requireNonNull(yearEditText.getText()).toString().trim();
 
             // Validation
             if (model.isEmpty()) {
