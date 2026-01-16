@@ -22,4 +22,11 @@
     <string name="wallet">Wallet</string>
     <string name="notifications">Notifications</string>
     <string name="logout">Logout</string>
+    <string name="add_car">Add Car</string>
+    <string name="cancel">Cancel</string>
+    <string name="year_optional">Year (optional)</string>
+    <string name="color">Color</string>
+    <string name="plate_number">Plate Number</string>
+    <string name="car_model_e_g_toyota_camry">Car Model (e.g. Toyota Camry)</string>
+    <string name="add_new_car">Add New Car</string>
 </resources>
