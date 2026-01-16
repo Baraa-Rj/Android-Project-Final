@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/card_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+
+        <!-- Car Icon -->
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_car"
+            android:contentDescription="Car icon"
+            app:tint="@color/primary" />
+
+        <!-- Car Details -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="16dp">
+
+            <!-- Make and Model -->
+            <TextView
+                android:id="@+id/carMakeModel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Toyota Camry"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary" />
+
+            <!-- Plate Number -->
+            <TextView
+                android:id="@+id/carPlateNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ABC-1234"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginTop="4dp" />
+
+            <!-- Color -->
+            <TextView
+                android:id="@+id/carColor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Color: White"
+                android:textSize="12sp"
+                android:textColor="@color/text_hint"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <!-- Delete Button -->
+        <ImageButton
+            android:id="@+id/btnDeleteCar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_delete"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Delete car"
+            app:tint="@color/error" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

@@ -49,7 +49,7 @@ public class LoginFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView: Creating fragment view");
-        View view = inflater.inflate(R.layout.fragment_login, container, false);
+        View view = inflater.inflate(R.layout.fragment_auth_login, container, false);
         initializeUIElements(view);
         return view;
     }

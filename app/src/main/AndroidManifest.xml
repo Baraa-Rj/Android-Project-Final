@@ -28,6 +28,12 @@
         <activity
             android:name=".ui.customer.CustomerActivity"
             android:exported="false" />
+
+        <!-- Car List Activity -->
+        <activity
+            android:name=".ui.customer.CarListActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.customer.CustomerActivity" />
     </application>
 
 </manifest>

@@ -52,7 +52,7 @@ public class RegisterFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView: Creating fragment view");
-        View view = inflater.inflate(R.layout.fragment_register, container, false);
+        View view = inflater.inflate(R.layout.fragment_auth_register, container, false);
         initializeUIElements(view);
         return view;
     }

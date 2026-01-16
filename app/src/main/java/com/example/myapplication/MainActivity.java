@@ -7,9 +7,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
-import com.example.myapplication.ui.home.HomeFragment;
 import com.example.myapplication.ui.auth.LoginFragment;
+import com.example.myapplication.ui.customer.CustomerActivity;
 import com.example.myapplication.utils.TokenManager;
+import android.content.Intent;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -33,20 +34,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadInitialFragment() {
-        Fragment initialFragment;
-
         if (tokenManager.getToken() != null) {
-            Log.d(TAG, "loadInitialFragment: User is logged in, loading HomeFragment");
-            initialFragment = new HomeFragment();
+            // User is logged in, navigate to CustomerActivity
+            Log.d(TAG, "loadInitialFragment: User is logged in, navigating to CustomerActivity");
+            Intent intent = new Intent(this, CustomerActivity.class);
+            startActivity(intent);
+            finish();
         } else {
+            // User is not logged in, show LoginFragment
             Log.d(TAG, "loadInitialFragment: User is not logged in, loading LoginFragment");
-            initialFragment = new LoginFragment();
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new LoginFragment())
+                    .commit();
         }
-
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, initialFragment)
-                .commit();
     }
 
     @Override

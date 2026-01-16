@@ -71,8 +71,8 @@ public class CustomerProfileFragment extends Fragment {
 
     private void setupClickListeners() {
         myCarsItem.setOnClickListener(v -> {
-            // TODO: Navigate to CarListActivity (ListView demo)
-            Toast.makeText(requireContext(), "My Cars - Coming Soon", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(requireContext(), CarListActivity.class);
+            startActivity(intent);
         });
 
         walletItem.setOnClickListener(v -> {
