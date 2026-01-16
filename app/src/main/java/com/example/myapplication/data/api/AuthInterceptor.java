@@ -12,7 +12,7 @@ public class AuthInterceptor implements Interceptor {
     private final TokenManager tokenManager;
 
     public AuthInterceptor(@NonNull Context context) {
-        this.tokenManager = new TokenManager(context);
+        this.tokenManager = TokenManager.getInstance(context);
     }
 
     @NonNull

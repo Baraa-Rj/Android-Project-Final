@@ -1,6 +1,8 @@
 package com.example.myapplication.ui.customer;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,10 +13,20 @@ import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.myapplication.R;
+import com.example.myapplication.data.api.VolleyClient;
 import com.example.myapplication.utils.TokenManager;
 
+import org.json.JSONException;
+
+import java.util.Locale;
+import java.util.Map;
+
 public class CustomerHomeFragment extends Fragment {
+    private static final String TAG = "CustomerHomeFragment";
+
     private TextView welcomeText;
     private TextView userNameText;
     private CardView walletCard;
@@ -23,11 +35,13 @@ public class CustomerHomeFragment extends Fragment {
     private CardView myCarsCard;
     private CardView upcomingBookingCard;
     private TokenManager tokenManager;
+    private VolleyClient volleyClient;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         tokenManager = TokenManager.getInstance(getContext());
+        volleyClient = VolleyClient.getInstance(requireContext());
     }
 
     @Nullable
@@ -58,23 +72,82 @@ public class CustomerHomeFragment extends Fragment {
         String userEmail = tokenManager.getUserEmail();
         welcomeText.setText("Welcome Back!");
         userNameText.setText(userEmail != null ? userEmail : "Guest");
-        walletBalanceText.setText("$100.00");
+        // Will be updated by loadWalletBalance()
+        walletBalanceText.setText("Loading...");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh wallet balance when returning to this fragment
+        loadWalletBalance();
+    }
+
+    /**
+     * Fetch wallet balance from API using Volley
+     */
+    private void loadWalletBalance() {
+        String url = VolleyClient.BASE_URL + "/api/wallet/balance";
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        double balance = response.getDouble("balance");
+                        walletBalanceText.setText(String.format(Locale.US, "$%.2f", balance));
+                        Log.d(TAG, "Wallet balance loaded: $" + balance);
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing balance: " + e.getMessage());
+                        walletBalanceText.setText("$0.00");
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Error loading balance: " + (error.getMessage() != null ? error.getMessage() : "Unknown error"));
+                    walletBalanceText.setText("$0.00");
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return volleyClient.getAuthHeaders();
+            }
+        };
+
+        volleyClient.addToRequestQueue(request, TAG);
     }
     private void setupClickListeners() {
         walletCard.setOnClickListener(v -> {
-            // Handle wallet card click
+            Intent intent = new Intent(requireContext(), WalletActivity.class);
+            startActivity(intent);
         });
 
         bookNowCard.setOnClickListener(v -> {
-            // Handle book now card click
+            // Navigate to Services tab in parent activity
+            if (getActivity() instanceof CustomerActivity) {
+                ((CustomerActivity) getActivity()).navigateToServices();
+            }
         });
 
         myCarsCard.setOnClickListener(v -> {
-            // Handle my cars card click
+            Intent intent = new Intent(requireContext(), CarListActivity.class);
+            startActivity(intent);
         });
 
         upcomingBookingCard.setOnClickListener(v -> {
-            // Handle upcoming booking card click
+            // Navigate to Bookings tab in parent activity
+            if (getActivity() instanceof CustomerActivity) {
+                ((CustomerActivity) getActivity()).navigateToBookings();
+            }
         });
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Cancel pending Volley requests to prevent memory leaks
+        if (volleyClient != null) {
+            volleyClient.cancelRequests(TAG);
+        }
     }
 }

@@ -19,6 +19,7 @@ import com.example.myapplication.data.models.AuthResponse;
 import com.example.myapplication.data.models.Car;
 import com.example.myapplication.data.models.CarRequest;
 import com.example.myapplication.data.models.Booking;
+import com.example.myapplication.data.models.BookingRequest;
 
 public interface ApiService {
     @POST("/api/auth/login")
@@ -49,4 +50,9 @@ public interface ApiService {
     @GET("api/bookings")
     Call<List<Booking>> getBookings();
 
+    @POST("api/bookings")
+    Call<Booking> createBooking(@Body BookingRequest bookingRequest);
+
+    @DELETE("api/bookings/{id}")
+    Call<Void> cancelBooking(@Path("id") int id);
 }
