@@ -4,4 +4,8 @@
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="don_t_have_an_account_register">Don\'t have an account? Register</string>
+    <string name="profile">Profile</string>
+    <string name="bookings">Bookings</string>
+    <string name="services">Services</string>
+    <string name="home">Home</string>
 </resources>
