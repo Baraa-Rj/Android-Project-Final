@@ -76,8 +76,8 @@ public class CustomerProfileFragment extends Fragment {
         });
 
         walletItem.setOnClickListener(v -> {
-            // TODO: Navigate to WalletActivity (Volley demo)
-            Toast.makeText(requireContext(), "Wallet - Coming Soon", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(requireContext(), WalletActivity.class);
+            startActivity(intent);
         });
 
         notificationsItem.setOnClickListener(v -> {

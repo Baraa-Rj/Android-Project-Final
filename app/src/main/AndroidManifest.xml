@@ -34,6 +34,18 @@
             android:name=".ui.customer.CarListActivity"
             android:exported="false"
             android:parentActivityName=".ui.customer.CustomerActivity" />
+
+        <!-- Booking Activity -->
+        <activity
+            android:name=".ui.customer.BookingActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.customer.CustomerActivity" />
+
+        <!-- Wallet Activity -->
+        <activity
+            android:name=".ui.customer.WalletActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.customer.CustomerActivity" />
     </application>
 
 </manifest>

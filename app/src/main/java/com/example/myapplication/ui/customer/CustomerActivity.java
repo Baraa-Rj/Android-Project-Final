@@ -71,4 +71,18 @@ public class CustomerActivity extends AppCompatActivity {
     private void initViews() {
         bottomNavigationView = findViewById(R.id.bottom_navigation);
     }
+
+    /**
+     * Navigate to Services tab (called from HomeFragment)
+     */
+    public void navigateToServices() {
+        bottomNavigationView.setSelectedItemId(R.id.nav_services);
+    }
+
+    /**
+     * Navigate to Bookings tab (called from HomeFragment)
+     */
+    public void navigateToBookings() {
+        bottomNavigationView.setSelectedItemId(R.id.nav_bookings);
+    }
 }

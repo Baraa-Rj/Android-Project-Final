@@ -1,5 +1,6 @@
 package com.example.myapplication.ui.customer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -108,7 +109,12 @@ public class CustomerServicesFragment extends Fragment implements ServiceAdapter
 
     @Override
     public void onBookClick(Service service) {
-        // TODO: Navigate to BookingActivity with service data
-        Toast.makeText(requireContext(), "Book: " + service.getName(), Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(requireContext(), BookingActivity.class);
+        intent.putExtra(BookingActivity.EXTRA_SERVICE_ID, service.getId());
+        intent.putExtra(BookingActivity.EXTRA_SERVICE_NAME, service.getName());
+        intent.putExtra(BookingActivity.EXTRA_SERVICE_DESCRIPTION, service.getDescription());
+        intent.putExtra(BookingActivity.EXTRA_SERVICE_PRICE, service.getPrice());
+        intent.putExtra(BookingActivity.EXTRA_SERVICE_DURATION, service.getDuration());
+        startActivity(intent);
     }
 }

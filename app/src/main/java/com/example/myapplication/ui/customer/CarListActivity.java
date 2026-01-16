@@ -2,6 +2,7 @@ package com.example.myapplication.ui.customer;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -16,8 +17,11 @@ import com.example.myapplication.R;
 import com.example.myapplication.data.api.ApiService;
 import com.example.myapplication.data.api.RetrofitClient;
 import com.example.myapplication.data.models.Car;
+import com.example.myapplication.data.models.CarRequest;
 import com.example.myapplication.ui.customer.adapter.CarAdapter;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +41,11 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
     private final List<Car> carList = new ArrayList<>();
     private ApiService apiService;
 
+    // Track active calls for cleanup
+    private Call<List<Car>> loadCarsCall;
+    private Call<Void> deleteCarCall;
+    private Call<Car> addCarCall;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,9 +58,11 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
     }
 
     private void loadCars() {
-        apiService.getCars().enqueue(new Callback<List<Car>>() {
+        loadCarsCall = apiService.getCars();
+        loadCarsCall.enqueue(new Callback<List<Car>>() {
             @Override
             public void onResponse(@NonNull Call<List<Car>> call, Response<List<Car>> response) {
+                if (isFinishing() || isDestroyed()) return;
                 if (response.isSuccessful() && response.body() != null) {
                     carList.clear();
                     carList.addAll(response.body());
@@ -66,6 +77,7 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
 
             @Override
             public void onFailure(@NonNull Call<List<Car>> call, @NonNull Throwable t) {
+                if (isFinishing() || isDestroyed()) return;
                 Log.e(TAG, "Error loading cars: " + t.getMessage());
                 Toast.makeText(CarListActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
@@ -119,10 +131,13 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+
     private void deleteCar(Car car, int position) {
-        apiService.deleteCar(car.getId()).enqueue(new Callback<Void>() {
+        deleteCarCall = apiService.deleteCar(car.getId());
+        deleteCarCall.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (isFinishing() || isDestroyed()) return;
                 if (response.isSuccessful()) {
                     carAdapter.removeCar(position);
                     updateEmptyState();
@@ -134,11 +149,105 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
 
             @Override
             public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                if (isFinishing() || isDestroyed()) return;
                 Toast.makeText(CarListActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
+
     private void showAddCarDialog() {
-        Toast.makeText(this, "Add car coming soon!", Toast.LENGTH_SHORT).show();
+        // Inflate dialog view ONCE
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_car, null);
+
+        // Get references from the SAME inflated view
+        TextInputEditText modelEditText = dialogView.findViewById(R.id.modelEditText);
+        TextInputEditText plateNumberEditText = dialogView.findViewById(R.id.plateNumberEditText);
+        TextInputEditText colorEditText = dialogView.findViewById(R.id.colorEditText);
+        TextInputEditText yearEditText = dialogView.findViewById(R.id.yearEditText);
+        MaterialButton cancelButton = dialogView.findViewById(R.id.cancelButton);
+        MaterialButton addButton = dialogView.findViewById(R.id.addButton);
+
+        // Create dialog with the inflated view
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(true)
+                .create();
+
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+
+        addButton.setOnClickListener(v -> {
+            String model = modelEditText.getText().toString().trim();
+            String plateNumber = plateNumberEditText.getText().toString().trim();
+            String color = colorEditText.getText().toString().trim();
+            String yearStr = yearEditText.getText().toString().trim();
+
+            // Validation
+            if (model.isEmpty()) {
+                modelEditText.setError("Model is required");
+                return;
+            }
+            if (plateNumber.isEmpty()) {
+                plateNumberEditText.setError("Plate number is required");
+                return;
+            }
+            if (color.isEmpty()) {
+                colorEditText.setError("Color is required");
+                return;
+            }
+
+            // Parse year (optional)
+            Integer year = null;
+            if (!yearStr.isEmpty()) {
+                try {
+                    year = Integer.parseInt(yearStr);
+                } catch (NumberFormatException e) {
+                    yearEditText.setError("Invalid year");
+                    return;
+                }
+            }
+
+            // Use CarRequest (not Car) for API
+            CarRequest carRequest = new CarRequest(model, plateNumber, color, year);
+            addCar(carRequest, dialog);
+        });
+
+        dialog.show();
+    }
+
+    private void addCar(CarRequest carRequest, AlertDialog dialog) {
+        addCarCall = apiService.addCar(carRequest);
+        addCarCall.enqueue(new Callback<Car>() {
+            @Override
+            public void onResponse(@NonNull Call<Car> call, @NonNull Response<Car> response) {
+                if (isFinishing() || isDestroyed()) return;
+                if (response.isSuccessful() && response.body() != null) {
+                    carList.add(response.body());
+                    carAdapter.updateCars(carList);
+                    updateEmptyState();
+                    dialog.dismiss();
+                    Toast.makeText(CarListActivity.this, "Car added successfully", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Car added: " + response.body().getModel());
+                } else {
+                    Toast.makeText(CarListActivity.this, "Failed to add car", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Failed to add car: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Car> call, @NonNull Throwable t) {
+                if (isFinishing() || isDestroyed()) return;
+                Toast.makeText(CarListActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error adding car: " + t.getMessage());
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Cancel pending Retrofit calls to prevent memory leaks
+        if (loadCarsCall != null) loadCarsCall.cancel();
+        if (deleteCarCall != null) deleteCarCall.cancel();
+        if (addCarCall != null) addCarCall.cancel();
     }
 }
