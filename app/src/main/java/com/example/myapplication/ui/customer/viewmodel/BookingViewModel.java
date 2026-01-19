@@ -39,6 +39,12 @@ public class BookingViewModel extends AndroidViewModel {
         Log.d(TAG, "BookingViewModel initialized");
     }
 
+    // Package-private constructor for testing
+    BookingViewModel(@NonNull Application application, BookingRepository bookingRepository) {
+        super(application);
+        this.bookingRepository = bookingRepository;
+    }
+
     public LiveData<List<Booking>> getBookingsLiveData() {
         return bookingsLiveData;
     }

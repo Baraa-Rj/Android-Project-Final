@@ -36,6 +36,13 @@ public class AuthViewModel extends AndroidViewModel {
         this.tokenManager = new TokenManager(application);
     }
 
+    // Package-private constructor for testing
+    AuthViewModel(@NonNull Application application, AuthRepo authRepo, TokenManager tokenManager) {
+        super(application);
+        this.authRepo = authRepo;
+        this.tokenManager = tokenManager;
+    }
+
     public LiveData<AuthResponse> getAuthResponseLiveData() {
         return authResponseLiveData;
     }

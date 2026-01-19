@@ -64,7 +64,14 @@ dependencies {
     // Volley for HTTP networking (educational contrast with Retrofit)
     implementation("com.android.volley:volley:1.2.1")
 
+    // Unit testing dependencies
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockwebserver)
+    testImplementation(libs.arch.core.testing)
+    testImplementation(libs.coroutines.test)
+
+    // Android instrumentation testing dependencies
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }

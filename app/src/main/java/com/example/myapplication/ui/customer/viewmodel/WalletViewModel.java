@@ -34,6 +34,12 @@ public class WalletViewModel extends AndroidViewModel {
         Log.d(TAG, "WalletViewModel initialized");
     }
 
+    // Package-private constructor for testing
+    WalletViewModel(@NonNull Application application, WalletRepository walletRepository) {
+        super(application);
+        this.walletRepository = walletRepository;
+    }
+
     public LiveData<WalletBalance> getWalletBalanceLiveData() {
         return walletBalanceLiveData;
     }

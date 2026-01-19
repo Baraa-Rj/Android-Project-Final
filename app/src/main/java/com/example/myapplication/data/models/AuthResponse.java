@@ -45,4 +45,33 @@ public class AuthResponse {
     public String getTokenType() {
         return tokenType;
     }
+
+    // Setters for testing
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
+    }
 }

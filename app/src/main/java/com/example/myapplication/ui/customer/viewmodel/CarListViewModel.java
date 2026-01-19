@@ -39,6 +39,12 @@ public class CarListViewModel extends AndroidViewModel {
         Log.d(TAG, "CarListViewModel initialized");
     }
 
+    // Package-private constructor for testing
+    CarListViewModel(@NonNull Application application, CarRepository carRepository) {
+        super(application);
+        this.carRepository = carRepository;
+    }
+
     public LiveData<List<Car>> getCarsLiveData() {
         return carsLiveData;
     }
