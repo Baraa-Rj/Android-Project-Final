@@ -75,7 +75,9 @@ public class CustomerBookingsFragment extends Fragment implements BookingAdapter
 
         viewModel.getErrorLiveData().observe(getViewLifecycleOwner(), error -> {
             if (error != null) {
-                Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
+                String errorMessage = error.hasGeneralError() ?
+                    error.getGeneralError() : "Failed to load bookings";
+                Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
 
