@@ -7,10 +7,12 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.myapplication.R;
+import com.example.myapplication.databinding.ActivityCustomerBinding;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class CustomerActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
+    private ActivityCustomerBinding binding;
     private Fragment homeFragment;
     private Fragment servicesFragment;
     private Fragment bookingsFragment;
@@ -20,7 +22,8 @@ public class CustomerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_customer);
+        binding = ActivityCustomerBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         initViews();
         initFragments();
         setupBottomNavigation();
@@ -28,7 +31,7 @@ public class CustomerActivity extends AppCompatActivity {
     }
 
     private void setupBottomNavigation() {
-        bottomNavigationView.setOnItemSelectedListener(item -> {
+        binding.bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
 
             if (itemId == R.id.nav_home) {
@@ -57,10 +60,10 @@ public class CustomerActivity extends AppCompatActivity {
         activeFragment = homeFragment;
 
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container, profileFragment, "profile").hide(profileFragment)
-                .add(R.id.fragment_container, bookingsFragment, "bookings").hide(bookingsFragment)
-                .add(R.id.fragment_container, servicesFragment, "service").hide(servicesFragment)
-                .add(R.id.fragment_container, homeFragment, "home").commit();
+                .add(binding.fragmentContainer.getId(), profileFragment, "profile").hide(profileFragment)
+                .add(binding.fragmentContainer.getId(), bookingsFragment, "bookings").hide(bookingsFragment)
+                .add(binding.fragmentContainer.getId(), servicesFragment, "service").hide(servicesFragment)
+                .add(binding.fragmentContainer.getId(), homeFragment, "home").commit();
     }
 
     private void switchFragment(Fragment newFragment) {
@@ -69,20 +72,20 @@ public class CustomerActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        // View binding handles view initialization
     }
 
     /**
      * Navigate to Services tab (called from HomeFragment)
      */
     public void navigateToServices() {
-        bottomNavigationView.setSelectedItemId(R.id.nav_services);
+        binding.bottomNavigation.setSelectedItemId(R.id.nav_services);
     }
 
     /**
      * Navigate to Bookings tab (called from HomeFragment)
      */
     public void navigateToBookings() {
-        bottomNavigationView.setSelectedItemId(R.id.nav_bookings);
+        binding.bottomNavigation.setSelectedItemId(R.id.nav_bookings);
     }
 }

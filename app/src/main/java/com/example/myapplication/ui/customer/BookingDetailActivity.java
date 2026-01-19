@@ -11,6 +11,7 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.example.myapplication.R;
 import com.example.myapplication.data.models.Booking;
+import com.example.myapplication.databinding.ActivityBookingDetailBinding;
 import com.google.android.material.button.MaterialButton;
 
 import java.text.NumberFormat;
@@ -30,18 +31,8 @@ public class BookingDetailActivity extends AppCompatActivity {
     public static final String EXTRA_TOTAL_PRICE = "total_price";
     public static final String EXTRA_NOTES = "notes";
 
-    // Views
-    private Toolbar toolbar;
-    private TextView statusChip;
-    private TextView serviceNameText;
-    private TextView carModelText;
-    private TextView scheduledTimeText;
-    private TextView locationText;
-    private TextView priceText;
-    private TextView notesText;
-    private TextView notesLabel;
-    private MaterialButton cancelButton;
-    private MaterialButton rescheduleButton;
+    // View Binding
+    private ActivityBookingDetailBinding binding;
 
     // Data
     private int bookingId;
@@ -50,7 +41,8 @@ public class BookingDetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_booking_detail);
+        binding = ActivityBookingDetailBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         initViews();
         loadBookingData();
@@ -59,20 +51,8 @@ public class BookingDetailActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        toolbar = findViewById(R.id.toolbar);
-        statusChip = findViewById(R.id.statusChip);
-        serviceNameText = findViewById(R.id.serviceNameText);
-        carModelText = findViewById(R.id.carModelText);
-        scheduledTimeText = findViewById(R.id.scheduledTimeText);
-        locationText = findViewById(R.id.locationText);
-        priceText = findViewById(R.id.priceText);
-        notesText = findViewById(R.id.notesText);
-        notesLabel = findViewById(R.id.notesLabel);
-        cancelButton = findViewById(R.id.cancelButton);
-        rescheduleButton = findViewById(R.id.rescheduleButton);
-
-        cancelButton.setOnClickListener(v -> handleCancelBooking());
-        rescheduleButton.setOnClickListener(v -> handleRescheduleBooking());
+        binding.cancelButton.setOnClickListener(v -> handleCancelBooking());
+        binding.rescheduleButton.setOnClickListener(v -> handleRescheduleBooking());
     }
 
     private void loadBookingData() {
@@ -86,44 +66,44 @@ public class BookingDetailActivity extends AppCompatActivity {
         String notes = getIntent().getStringExtra(EXTRA_NOTES);
 
         // Set data to views
-        serviceNameText.setText(serviceName != null ? serviceName : "N/A");
-        carModelText.setText(carModel != null ? carModel : "N/A");
-        scheduledTimeText.setText(formatDateTime(scheduledTime));
-        locationText.setText(location != null ? location : "N/A");
-        priceText.setText(formatPrice(totalPrice));
+        binding.serviceNameText.setText(serviceName != null ? serviceName : "N/A");
+        binding.carModelText.setText(carModel != null ? carModel : "N/A");
+        binding.scheduledTimeText.setText(formatDateTime(scheduledTime));
+        binding.locationText.setText(location != null ? location : "N/A");
+        binding.priceText.setText(formatPrice(totalPrice));
 
         // Handle notes
         if (notes != null && !notes.trim().isEmpty()) {
-            notesText.setText(notes);
-            notesText.setVisibility(View.VISIBLE);
-            notesLabel.setVisibility(View.VISIBLE);
+            binding.notesText.setText(notes);
+            binding.notesText.setVisibility(View.VISIBLE);
+            binding.notesLabel.setVisibility(View.VISIBLE);
         } else {
-            notesText.setVisibility(View.GONE);
-            notesLabel.setVisibility(View.GONE);
+            binding.notesText.setVisibility(View.GONE);
+            binding.notesLabel.setVisibility(View.GONE);
         }
 
         // Set status chip
-        statusChip.setText(capitalizeStatus(status));
-        statusChip.setBackgroundColor(getStatusColor(status));
+        binding.statusChip.setText(capitalizeStatus(status));
+        binding.statusChip.setBackgroundColor(getStatusColor(status));
     }
 
     private void setupToolbar() {
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Booking #" + bookingId);
         }
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        binding.toolbar.setNavigationOnClickListener(v -> onBackPressed());
     }
 
     private void updateUIBasedOnStatus() {
         // Only show cancel/reschedule buttons for PENDING bookings
         if ("PENDING".equalsIgnoreCase(status)) {
-            cancelButton.setVisibility(View.VISIBLE);
-            rescheduleButton.setVisibility(View.VISIBLE);
+            binding.cancelButton.setVisibility(View.VISIBLE);
+            binding.rescheduleButton.setVisibility(View.VISIBLE);
         } else {
-            cancelButton.setVisibility(View.GONE);
-            rescheduleButton.setVisibility(View.GONE);
+            binding.cancelButton.setVisibility(View.GONE);
+            binding.rescheduleButton.setVisibility(View.GONE);
         }
     }
 

@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import com.example.myapplication.databinding.ActivityMainBinding;
 import com.example.myapplication.ui.auth.LoginFragment;
 import com.example.myapplication.ui.customer.CustomerActivity;
 import com.example.myapplication.utils.TokenManager;
@@ -15,12 +16,14 @@ import android.content.Intent;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private TokenManager tokenManager;
+    private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate: Activity is being created");
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         tokenManager = TokenManager.getInstance(this);
 
@@ -45,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "loadInitialFragment: User is not logged in, loading LoginFragment");
             getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragment_container, new LoginFragment())
+                    .replace(binding.fragmentContainer.getId(), new LoginFragment())
                     .commit();
         }
     }
