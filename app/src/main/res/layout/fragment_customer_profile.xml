@@ -139,13 +139,15 @@
 
                 </LinearLayout>
 
+                <!-- Notifications feature hidden - requires backend support -->
+                <!-- TODO: Implement notifications when backend API is ready -->
+                <!--
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="@color/background"
                     android:layout_marginStart="56dp" />
 
-                <!-- Notifications -->
                 <LinearLayout
                     android:id="@+id/notificationsItem"
                     android:layout_width="match_parent"
@@ -177,6 +179,7 @@
                         app:tint="@color/text_secondary" />
 
                 </LinearLayout>
+                -->
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
