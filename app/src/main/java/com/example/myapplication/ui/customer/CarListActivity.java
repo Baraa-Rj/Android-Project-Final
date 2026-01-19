@@ -18,6 +18,7 @@ import com.example.myapplication.data.models.CarRequest;
 import com.example.myapplication.data.models.ValidationError;
 import com.example.myapplication.ui.customer.adapter.CarAdapter;
 import com.example.myapplication.ui.customer.viewmodel.CarListViewModel;
+import com.example.myapplication.utils.TokenManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -37,6 +38,7 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
     private CarAdapter carAdapter;
     private final List<Car> carList = new ArrayList<>();
     private CarListViewModel viewModel;
+    private TokenManager tokenManager;
     private AlertDialog currentDialog;
 
     // Dialog field references for error handling
@@ -107,6 +109,7 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
         fabAddCar = findViewById(R.id.fabAddCar);
         toolbar = findViewById(R.id.toolbar);
         viewModel = new ViewModelProvider(this).get(CarListViewModel.class);
+        tokenManager = TokenManager.getInstance(this);
     }
 
     private void setupToolbar() {
@@ -215,7 +218,8 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
             }
 
             // Use CarRequest (not Car) for API
-            CarRequest carRequest = new CarRequest(model, plateNumber, color, year);
+            int userId = tokenManager.getUserId();
+            CarRequest carRequest = new CarRequest(userId, model, plateNumber, color, year);
             viewModel.addCar(carRequest);
         });
 

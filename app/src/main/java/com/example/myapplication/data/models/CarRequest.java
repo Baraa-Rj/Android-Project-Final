@@ -3,6 +3,8 @@ package com.example.myapplication.data.models;
 import com.google.gson.annotations.SerializedName;
 
 public class CarRequest {
+    @SerializedName("user_id")
+    private Integer userId;
     private String model;
     @SerializedName("plate_number")
     private String plateNumber;
@@ -12,7 +14,8 @@ public class CarRequest {
     public CarRequest() {
     }
 
-    public CarRequest(String model, String plateNumber, String color, Integer year) {
+    public CarRequest(Integer userId, String model, String plateNumber, String color, Integer year) {
+        this.userId = userId;
         this.model = model;
         this.plateNumber = plateNumber;
         this.color = color;
@@ -49,5 +52,13 @@ public class CarRequest {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
 }
