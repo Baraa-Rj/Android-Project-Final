@@ -41,6 +41,12 @@
             android:exported="false"
             android:parentActivityName=".ui.customer.CustomerActivity" />
 
+        <!-- Booking Detail Activity -->
+        <activity
+            android:name=".ui.customer.BookingDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.customer.CustomerActivity" />
+
         <!-- Wallet Activity -->
         <activity
             android:name=".ui.customer.WalletActivity"

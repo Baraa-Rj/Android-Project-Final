@@ -1,5 +1,6 @@
 package com.example.myapplication.ui.customer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -108,8 +109,16 @@ public class CustomerBookingsFragment extends Fragment implements BookingAdapter
 
     @Override
     public void onBookingClick(Booking booking) {
-        // TODO: Navigate to BookingDetailActivity
-        Toast.makeText(requireContext(), "Booking #" + booking.getId() + " - " + booking.getStatus(), Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(requireContext(), BookingDetailActivity.class);
+        intent.putExtra(BookingDetailActivity.EXTRA_BOOKING_ID, booking.getId());
+        intent.putExtra(BookingDetailActivity.EXTRA_SERVICE_NAME, booking.getServiceName());
+        intent.putExtra(BookingDetailActivity.EXTRA_CAR_MODEL, booking.getCarModel());
+        intent.putExtra(BookingDetailActivity.EXTRA_SCHEDULED_TIME, booking.getScheduledTime());
+        intent.putExtra(BookingDetailActivity.EXTRA_LOCATION, booking.getLocation());
+        intent.putExtra(BookingDetailActivity.EXTRA_STATUS, booking.getStatus());
+        intent.putExtra(BookingDetailActivity.EXTRA_TOTAL_PRICE, booking.getTotalPrice());
+        intent.putExtra(BookingDetailActivity.EXTRA_NOTES, booking.getNotes());
+        startActivity(intent);
     }
 
     // Refresh bookings when fragment becomes visible again

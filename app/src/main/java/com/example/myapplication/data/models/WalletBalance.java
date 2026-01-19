@@ -1,16 +1,24 @@
 package com.example.myapplication.data.models;
 
+import com.google.gson.annotations.SerializedName;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
  * WalletBalance model for wallet balance response.
- * Uses manual JSON parsing (for Volley) instead of GSON annotations.
+ * Supports both Retrofit (GSON annotations) and Volley (manual parsing).
  */
 public class WalletBalance {
+    @SerializedName("user_id")
     private int userId;
+
+    @SerializedName("balance")
     private double balance;
+
+    @SerializedName("total_credits")
     private double totalCredits;
+
+    @SerializedName("total_debits")
     private double totalDebits;
 
     public WalletBalance() {

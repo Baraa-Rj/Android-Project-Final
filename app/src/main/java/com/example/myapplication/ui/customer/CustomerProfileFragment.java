@@ -24,7 +24,6 @@ public class CustomerProfileFragment extends Fragment {
     private TextView userEmail;
     private LinearLayout myCarsItem;
     private LinearLayout walletItem;
-    private LinearLayout notificationsItem;
     private MaterialButton logoutButton;
 
     private TokenManager tokenManager;
@@ -55,7 +54,6 @@ public class CustomerProfileFragment extends Fragment {
         userEmail = view.findViewById(R.id.userEmail);
         myCarsItem = view.findViewById(R.id.myCarsItem);
         walletItem = view.findViewById(R.id.walletItem);
-        notificationsItem = view.findViewById(R.id.notificationsItem);
         logoutButton = view.findViewById(R.id.logoutButton);
     }
 
@@ -80,10 +78,8 @@ public class CustomerProfileFragment extends Fragment {
             startActivity(intent);
         });
 
-        notificationsItem.setOnClickListener(v -> {
-            // TODO: Navigate to NotificationsActivity
-            Toast.makeText(requireContext(), "Notifications - Coming Soon", Toast.LENGTH_SHORT).show();
-        });
+        // Notifications feature removed - requires backend support
+        // TODO: Implement notifications when backend API is ready
 
         logoutButton.setOnClickListener(v -> logout());
     }

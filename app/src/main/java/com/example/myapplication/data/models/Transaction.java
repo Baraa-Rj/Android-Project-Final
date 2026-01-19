@@ -1,20 +1,36 @@
 package com.example.myapplication.data.models;
 
+import com.google.gson.annotations.SerializedName;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
  * Transaction model for wallet transactions.
- * Uses manual JSON parsing (for Volley) instead of GSON annotations.
+ * Supports both Retrofit (GSON annotations) and Volley (manual parsing).
  */
 public class Transaction {
+    @SerializedName("id")
     private int id;
+
+    @SerializedName("user_id")
     private int userId;
+
+    @SerializedName("booking_id")
     private Integer bookingId;
+
+    @SerializedName("amount")
     private double amount;
+
+    @SerializedName("type")
     private String type; // "credit" or "debit"
+
+    @SerializedName("description")
     private String description;
+
+    @SerializedName("created_at")
     private String createdAt;
+
+    @SerializedName("service_name")
     private String serviceName; // From joined booking data
 
     public Transaction() {
