@@ -17,10 +17,12 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.myapplication.R;
 import com.example.myapplication.data.models.BookingRequest;
 import com.example.myapplication.data.models.Car;
+import com.example.myapplication.data.models.ValidationError;
 import com.example.myapplication.ui.customer.viewmodel.BookingViewModel;
 import com.example.myapplication.ui.customer.viewmodel.CarListViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.example.myapplication.utils.TokenManager;
 
 import java.text.SimpleDateFormat;
@@ -49,7 +51,9 @@ public class BookingActivity extends AppCompatActivity {
     private TextView noCarsWarning;
     private MaterialButton dateButton;
     private MaterialButton timeButton;
+    private TextInputLayout locationInputLayout;
     private TextInputEditText locationEditText;
+    private TextInputLayout notesInputLayout;
     private TextInputEditText notesEditText;
     private MaterialButton confirmButton;
     private FrameLayout loadingOverlay;
@@ -88,7 +92,9 @@ public class BookingActivity extends AppCompatActivity {
         noCarsWarning = findViewById(R.id.noCarsWarning);
         dateButton = findViewById(R.id.dateButton);
         timeButton = findViewById(R.id.timeButton);
+        locationInputLayout = findViewById(R.id.locationInputLayout);
         locationEditText = findViewById(R.id.locationEditText);
+        notesInputLayout = findViewById(R.id.notesInputLayout);
         notesEditText = findViewById(R.id.notesEditText);
         confirmButton = findViewById(R.id.confirmButton);
         loadingOverlay = findViewById(R.id.loadingOverlay);
@@ -123,7 +129,7 @@ public class BookingActivity extends AppCompatActivity {
 
         bookingViewModel.getErrorLiveData().observe(this, error -> {
             if (error != null) {
-                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+                handleValidationError(error);
             }
         });
 
@@ -259,6 +265,9 @@ public class BookingActivity extends AppCompatActivity {
     }
 
     private void validateAndBook() {
+        // Clear previous errors
+        clearFieldErrors();
+
         // Validate car selection
         if (carList.isEmpty()) {
             Toast.makeText(this, "Please add a car first", Toast.LENGTH_SHORT).show();
@@ -281,7 +290,8 @@ public class BookingActivity extends AppCompatActivity {
         String location = locationEditText.getText() != null ?
                 locationEditText.getText().toString().trim() : "";
         if (location.isEmpty()) {
-            locationEditText.setError("Location is required");
+            locationInputLayout.setError("Location is required");
+            locationInputLayout.setErrorEnabled(true);
             return;
         }
 
@@ -317,5 +327,56 @@ public class BookingActivity extends AppCompatActivity {
     private void showLoading(boolean show) {
         loadingOverlay.setVisibility(show ? View.VISIBLE : View.GONE);
         confirmButton.setEnabled(!show);
+    }
+
+    private void handleValidationError(ValidationError error) {
+        // Clear all previous errors
+        clearFieldErrors();
+
+        // Show field-specific errors
+        if (error.hasFieldErrors()) {
+            for (String field : error.getAllFieldErrors().keySet()) {
+                String errorMessage = error.getFieldError(field);
+                showFieldError(field, errorMessage);
+            }
+        }
+
+        // Show general error as toast if no field errors
+        if (error.hasGeneralError()) {
+            Toast.makeText(this, error.getGeneralError(), Toast.LENGTH_LONG).show();
+        }
+        // If only field errors, show a generic toast
+        else if (error.hasFieldErrors()) {
+            Toast.makeText(this, "Please correct the highlighted fields", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showFieldError(String field, String errorMessage) {
+        switch (field) {
+            case "location":
+                locationInputLayout.setError(errorMessage);
+                locationInputLayout.setErrorEnabled(true);
+                break;
+            case "notes":
+                notesInputLayout.setError(errorMessage);
+                notesInputLayout.setErrorEnabled(true);
+                break;
+            case "scheduled_time":
+            case "scheduledTime":
+                // For date/time errors, show toast since they use pickers
+                Toast.makeText(this, "Scheduled time: " + errorMessage, Toast.LENGTH_LONG).show();
+                break;
+            default:
+                // Unknown field, show in toast
+                Toast.makeText(this, field + ": " + errorMessage, Toast.LENGTH_LONG).show();
+                break;
+        }
+    }
+
+    private void clearFieldErrors() {
+        locationInputLayout.setError(null);
+        locationInputLayout.setErrorEnabled(false);
+        notesInputLayout.setError(null);
+        notesInputLayout.setErrorEnabled(false);
     }
 }

@@ -10,7 +10,9 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.myapplication.data.models.Booking;
 import com.example.myapplication.data.models.BookingRequest;
+import com.example.myapplication.data.models.ValidationError;
 import com.example.myapplication.data.repository.BookingRepository;
+import com.example.myapplication.utils.ValidationErrorParser;
 
 import java.util.List;
 
@@ -24,7 +26,7 @@ public class BookingViewModel extends AndroidViewModel {
     private final BookingRepository bookingRepository;
     private final MutableLiveData<List<Booking>> bookingsLiveData = new MutableLiveData<>();
     private final MutableLiveData<Booking> bookingCreatedLiveData = new MutableLiveData<>();
-    private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private final MutableLiveData<ValidationError> errorLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> loadingLiveData = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> bookingCancelledLiveData = new MutableLiveData<>();
 
@@ -53,7 +55,7 @@ public class BookingViewModel extends AndroidViewModel {
         return bookingCreatedLiveData;
     }
 
-    public LiveData<String> getErrorLiveData() {
+    public LiveData<ValidationError> getErrorLiveData() {
         return errorLiveData;
     }
 
@@ -80,7 +82,8 @@ public class BookingViewModel extends AndroidViewModel {
                     Log.d(TAG, "Loaded " + bookings.size() + " bookings");
                 } else {
                     Log.e(TAG, "Failed to load bookings: " + response.code());
-                    errorLiveData.setValue("Failed to load bookings");
+                    ValidationError validationError = ValidationErrorParser.parseError(response);
+                    errorLiveData.setValue(validationError);
                 }
                 loadBookingsCall = null;
             }
@@ -88,9 +91,10 @@ public class BookingViewModel extends AndroidViewModel {
             @Override
             public void onFailure(@NonNull Call<List<Booking>> call, @NonNull Throwable t) {
                 loadingLiveData.setValue(false);
-                String errorMessage = "Connection failed. Please check your internet connection.";
                 Log.e(TAG, "Error loading bookings: " + t.getMessage());
-                errorLiveData.setValue(errorMessage);
+                ValidationError validationError = new ValidationError();
+                validationError.setGeneralError("Connection failed. Please check your internet connection.");
+                errorLiveData.setValue(validationError);
                 loadBookingsCall = null;
             }
         });
@@ -111,7 +115,8 @@ public class BookingViewModel extends AndroidViewModel {
                     bookingCreatedLiveData.setValue(booking);
                 } else {
                     Log.e(TAG, "Failed to create booking: " + response.code());
-                    errorLiveData.setValue("Failed to create booking");
+                    ValidationError validationError = ValidationErrorParser.parseError(response);
+                    errorLiveData.setValue(validationError);
                 }
                 createBookingCall = null;
             }
@@ -119,9 +124,10 @@ public class BookingViewModel extends AndroidViewModel {
             @Override
             public void onFailure(@NonNull Call<Booking> call, @NonNull Throwable t) {
                 loadingLiveData.setValue(false);
-                String errorMessage = "Connection failed. Please check your internet connection.";
                 Log.e(TAG, "Error creating booking: " + t.getMessage());
-                errorLiveData.setValue(errorMessage);
+                ValidationError validationError = new ValidationError();
+                validationError.setGeneralError("Connection failed. Please check your internet connection.");
+                errorLiveData.setValue(validationError);
                 createBookingCall = null;
             }
         });
@@ -143,7 +149,8 @@ public class BookingViewModel extends AndroidViewModel {
                     loadBookings();
                 } else {
                     Log.e(TAG, "Failed to cancel booking: " + response.code());
-                    errorLiveData.setValue("Failed to cancel booking");
+                    ValidationError validationError = ValidationErrorParser.parseError(response);
+                    errorLiveData.setValue(validationError);
                 }
                 cancelBookingCall = null;
             }
@@ -151,9 +158,10 @@ public class BookingViewModel extends AndroidViewModel {
             @Override
             public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                 loadingLiveData.setValue(false);
-                String errorMessage = "Connection failed. Please check your internet connection.";
                 Log.e(TAG, "Error cancelling booking: " + t.getMessage());
-                errorLiveData.setValue(errorMessage);
+                ValidationError validationError = new ValidationError();
+                validationError.setGeneralError("Connection failed. Please check your internet connection.");
+                errorLiveData.setValue(validationError);
                 cancelBookingCall = null;
             }
         });
