@@ -20,6 +20,7 @@ import com.example.myapplication.data.models.Car;
 import com.example.myapplication.data.models.CarRequest;
 import com.example.myapplication.data.models.Booking;
 import com.example.myapplication.data.models.BookingRequest;
+import com.example.myapplication.data.models.RescheduleRequest;
 
 public interface ApiService {
     @POST("/api/auth/login")
@@ -55,4 +56,7 @@ public interface ApiService {
 
     @DELETE("api/bookings/{id}")
     Call<Void> cancelBooking(@Path("id") int id);
+
+    @PUT("api/bookings/{id}/reschedule")
+    Call<Booking> rescheduleBooking(@Path("id") int id, @Body RescheduleRequest request);
 }
