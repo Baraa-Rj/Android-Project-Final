@@ -3,7 +3,6 @@ package com.example.myapplication.ui.customer;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
@@ -11,16 +10,15 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.myapplication.R;
-import com.example.myapplication.data.api.ApiService;
-import com.example.myapplication.data.api.RetrofitClient;
-import com.example.myapplication.data.models.Booking;
 import com.example.myapplication.data.models.BookingRequest;
 import com.example.myapplication.data.models.Car;
+import com.example.myapplication.ui.customer.viewmodel.BookingViewModel;
+import com.example.myapplication.ui.customer.viewmodel.CarListViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.example.myapplication.utils.TokenManager;
@@ -30,10 +28,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class BookingActivity extends AppCompatActivity {
     private static final String TAG = "BookingActivity";
@@ -61,7 +55,8 @@ public class BookingActivity extends AppCompatActivity {
     private FrameLayout loadingOverlay;
 
     // Data
-    private ApiService apiService;
+    private CarListViewModel carListViewModel;
+    private BookingViewModel bookingViewModel;
     private TokenManager tokenManager;
     private List<Car> carList = new ArrayList<>();
     private int serviceId;
@@ -69,10 +64,6 @@ public class BookingActivity extends AppCompatActivity {
     private Calendar selectedDateTime = Calendar.getInstance();
     private boolean dateSelected = false;
     private boolean timeSelected = false;
-
-    // Track active calls for cleanup
-    private Call<List<Car>> loadCarsCall;
-    private Call<Booking> createBookingCall;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,8 +73,9 @@ public class BookingActivity extends AppCompatActivity {
         initViews();
         setupToolbar();
         loadServiceData();
-        loadUserCars();
+        setupObservers();
         setupClickListeners();
+        carListViewModel.loadCars();
     }
 
     private void initViews() {
@@ -101,8 +93,45 @@ public class BookingActivity extends AppCompatActivity {
         confirmButton = findViewById(R.id.confirmButton);
         loadingOverlay = findViewById(R.id.loadingOverlay);
 
-        apiService = RetrofitClient.getApiService(this);
+        carListViewModel = new ViewModelProvider(this).get(CarListViewModel.class);
+        bookingViewModel = new ViewModelProvider(this).get(BookingViewModel.class);
         tokenManager = TokenManager.getInstance(this);
+    }
+
+    private void setupObservers() {
+        carListViewModel.getCarsLiveData().observe(this, cars -> {
+            if (cars != null) {
+                carList.clear();
+                carList.addAll(cars);
+                setupCarSpinner();
+            }
+        });
+
+        carListViewModel.getErrorLiveData().observe(this, error -> {
+            if (error != null) {
+                showNoCarsWarning();
+            }
+        });
+
+        bookingViewModel.getBookingCreatedLiveData().observe(this, booking -> {
+            if (booking != null) {
+                Toast.makeText(this, "Booking confirmed!", Toast.LENGTH_LONG).show();
+                setResult(RESULT_OK);
+                finish();
+            }
+        });
+
+        bookingViewModel.getErrorLiveData().observe(this, error -> {
+            if (error != null) {
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        bookingViewModel.getLoadingLiveData().observe(this, isLoading -> {
+            if (isLoading != null) {
+                showLoading(isLoading);
+            }
+        });
     }
 
     private void setupToolbar() {
@@ -133,31 +162,6 @@ public class BookingActivity extends AppCompatActivity {
         serviceDescription.setText(description != null ? description : "");
         servicePrice.setText(String.format(Locale.US, "$%.2f", serviceServicePrice));
         serviceDuration.setText(String.format(Locale.US, "~%d min", duration));
-    }
-
-    private void loadUserCars() {
-        loadCarsCall = apiService.getCars();
-        loadCarsCall.enqueue(new Callback<List<Car>>() {
-            @Override
-            public void onResponse(@NonNull Call<List<Car>> call, @NonNull Response<List<Car>> response) {
-                if (isFinishing() || isDestroyed()) return;
-                if (response.isSuccessful() && response.body() != null) {
-                    carList.clear();
-                    carList.addAll(response.body());
-                    setupCarSpinner();
-                } else {
-                    Log.e(TAG, "Failed to load cars: " + response.code());
-                    showNoCarsWarning();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<List<Car>> call, @NonNull Throwable t) {
-                if (isFinishing() || isDestroyed()) return;
-                Log.e(TAG, "Error loading cars: " + t.getMessage());
-                showNoCarsWarning();
-            }
-        });
     }
 
     private void setupCarSpinner() {
@@ -307,49 +311,11 @@ public class BookingActivity extends AppCompatActivity {
                 notes
         );
 
-        createBooking(bookingRequest);
-    }
-
-    private void createBooking(BookingRequest bookingRequest) {
-        showLoading(true);
-
-        createBookingCall = apiService.createBooking(bookingRequest);
-        createBookingCall.enqueue(new Callback<Booking>() {
-            @Override
-            public void onResponse(@NonNull Call<Booking> call, @NonNull Response<Booking> response) {
-                if (isFinishing() || isDestroyed()) return;
-                showLoading(false);
-                if (response.isSuccessful() && response.body() != null) {
-                    Log.d(TAG, "Booking created: " + response.body().getId());
-                    Toast.makeText(BookingActivity.this, "Booking confirmed!", Toast.LENGTH_LONG).show();
-                    setResult(RESULT_OK);
-                    finish();
-                } else {
-                    Log.e(TAG, "Failed to create booking: " + response.code());
-                    Toast.makeText(BookingActivity.this, "Failed to create booking. Please try again.", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<Booking> call, @NonNull Throwable t) {
-                if (isFinishing() || isDestroyed()) return;
-                showLoading(false);
-                Log.e(TAG, "Error creating booking: " + t.getMessage());
-                Toast.makeText(BookingActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+        bookingViewModel.createBooking(bookingRequest);
     }
 
     private void showLoading(boolean show) {
         loadingOverlay.setVisibility(show ? View.VISIBLE : View.GONE);
         confirmButton.setEnabled(!show);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Cancel pending Retrofit calls to prevent memory leaks
-        if (loadCarsCall != null) loadCarsCall.cancel();
-        if (createBookingCall != null) createBookingCall.cancel();
     }
 }

@@ -1,24 +1,22 @@
 package com.example.myapplication.ui.customer;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.myapplication.R;
-import com.example.myapplication.data.api.ApiService;
-import com.example.myapplication.data.api.RetrofitClient;
 import com.example.myapplication.data.models.Car;
 import com.example.myapplication.data.models.CarRequest;
 import com.example.myapplication.ui.customer.adapter.CarAdapter;
+import com.example.myapplication.ui.customer.viewmodel.CarListViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -26,10 +24,6 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class CarListActivity extends AppCompatActivity implements CarAdapter.onCarDeleteListener {
     private static final String TAG = "CarListActivity";
@@ -40,12 +34,8 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
 
     private CarAdapter carAdapter;
     private final List<Car> carList = new ArrayList<>();
-    private ApiService apiService;
-
-    // Track active calls for cleanup
-    private Call<List<Car>> loadCarsCall;
-    private Call<Void> deleteCarCall;
-    private Call<Car> addCarCall;
+    private CarListViewModel viewModel;
+    private AlertDialog currentDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,32 +45,39 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
         setupToolbar();
         setupAdapter();
         setupListeners();
-        loadCars();
+        setupObservers();
+        viewModel.loadCars();
     }
 
-    private void loadCars() {
-        loadCarsCall = apiService.getCars();
-        loadCarsCall.enqueue(new Callback<List<Car>>() {
-            @Override
-            public void onResponse(@NonNull Call<List<Car>> call, @NonNull Response<List<Car>> response) {
-                if (isFinishing() || isDestroyed()) return;
-                if (response.isSuccessful() && response.body() != null) {
-                    carList.clear();
-                    carList.addAll(response.body());
-                    carAdapter.updateCars(carList);
-                    updateEmptyState();
-                    Log.d(TAG, "Loaded " + carList.size() + " cars");
-                } else {
-                    Log.e(TAG, "Failed to load cars: " + response.code());
-                    Toast.makeText(CarListActivity.this, "Failed to load cars", Toast.LENGTH_SHORT).show();
+    private void setupObservers() {
+        viewModel.getCarsLiveData().observe(this, cars -> {
+            if (cars != null) {
+                carList.clear();
+                carList.addAll(cars);
+                carAdapter.updateCars(carList);
+                updateEmptyState();
+            }
+        });
+
+        viewModel.getErrorLiveData().observe(this, error -> {
+            if (error != null) {
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        viewModel.getCarAddedLiveData().observe(this, added -> {
+            if (added != null && added) {
+                Toast.makeText(this, "Car added successfully", Toast.LENGTH_SHORT).show();
+                if (currentDialog != null) {
+                    currentDialog.dismiss();
+                    currentDialog = null;
                 }
             }
+        });
 
-            @Override
-            public void onFailure(@NonNull Call<List<Car>> call, @NonNull Throwable t) {
-                if (isFinishing() || isDestroyed()) return;
-                Log.e(TAG, "Error loading cars: " + t.getMessage());
-                Toast.makeText(CarListActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+        viewModel.getCarDeletedLiveData().observe(this, deleted -> {
+            if (deleted != null && deleted) {
+                Toast.makeText(this, "Car deleted", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -101,7 +98,7 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
         emptyState = findViewById(R.id.emptyState);
         fabAddCar = findViewById(R.id.fabAddCar);
         toolbar = findViewById(R.id.toolbar);
-        apiService = RetrofitClient.getApiService(this);
+        viewModel = new ViewModelProvider(this).get(CarListViewModel.class);
     }
 
     private void setupToolbar() {
@@ -134,26 +131,7 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
     }
 
     private void deleteCar(Car car, int position) {
-        deleteCarCall = apiService.deleteCar(car.getId());
-        deleteCarCall.enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                if (isFinishing() || isDestroyed()) return;
-                if (response.isSuccessful()) {
-                    carAdapter.removeCar(position);
-                    updateEmptyState();
-                    Toast.makeText(CarListActivity.this, "Car deleted", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(CarListActivity.this, "Failed to delete car", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                if (isFinishing() || isDestroyed()) return;
-                Toast.makeText(CarListActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+        viewModel.deleteCar(car.getId());
     }
 
     private void showAddCarDialog() {
@@ -169,12 +147,17 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
         MaterialButton addButton = dialogView.findViewById(R.id.addButton);
 
         // Create dialog with the inflated view
-        AlertDialog dialog = new AlertDialog.Builder(this)
+        currentDialog = new AlertDialog.Builder(this)
                 .setView(dialogView)
                 .setCancelable(true)
                 .create();
 
-        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        cancelButton.setOnClickListener(v -> {
+            if (currentDialog != null) {
+                currentDialog.dismiss();
+                currentDialog = null;
+            }
+        });
 
         addButton.setOnClickListener(v -> {
             String model = Objects.requireNonNull(modelEditText.getText()).toString().trim();
@@ -209,46 +192,9 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
 
             // Use CarRequest (not Car) for API
             CarRequest carRequest = new CarRequest(model, plateNumber, color, year);
-            addCar(carRequest, dialog);
+            viewModel.addCar(carRequest);
         });
 
-        dialog.show();
-    }
-
-    private void addCar(CarRequest carRequest, AlertDialog dialog) {
-        addCarCall = apiService.addCar(carRequest);
-        addCarCall.enqueue(new Callback<Car>() {
-            @Override
-            public void onResponse(@NonNull Call<Car> call, @NonNull Response<Car> response) {
-                if (isFinishing() || isDestroyed()) return;
-                if (response.isSuccessful() && response.body() != null) {
-                    carList.add(response.body());
-                    carAdapter.updateCars(carList);
-                    updateEmptyState();
-                    dialog.dismiss();
-                    Toast.makeText(CarListActivity.this, "Car added successfully", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "Car added: " + response.body().getModel());
-                } else {
-                    Toast.makeText(CarListActivity.this, "Failed to add car", Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Failed to add car: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<Car> call, @NonNull Throwable t) {
-                if (isFinishing() || isDestroyed()) return;
-                Toast.makeText(CarListActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "Error adding car: " + t.getMessage());
-            }
-        });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Cancel pending Retrofit calls to prevent memory leaks
-        if (loadCarsCall != null) loadCarsCall.cancel();
-        if (deleteCarCall != null) deleteCarCall.cancel();
-        if (addCarCall != null) addCarCall.cancel();
+        currentDialog.show();
     }
 }

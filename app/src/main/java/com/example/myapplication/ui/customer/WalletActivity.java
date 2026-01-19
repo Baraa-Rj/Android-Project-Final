@@ -1,7 +1,6 @@
 package com.example.myapplication.ui.customer;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -12,39 +11,22 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.android.volley.Request;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.myapplication.R;
-import com.example.myapplication.data.api.VolleyClient;
-import com.example.myapplication.data.models.Transaction;
-import com.example.myapplication.data.models.WalletBalance;
 import com.example.myapplication.ui.customer.adapter.TransactionAdapter;
+import com.example.myapplication.ui.customer.viewmodel.WalletViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 /**
- * WalletActivity demonstrates using Volley for HTTP requests
- * instead of Retrofit (used elsewhere in the app).
- *
- * Key Volley concepts demonstrated:
- * - JsonObjectRequest for single object responses
- * - JsonArrayRequest for array responses
- * - Request queue management
- * - Manual JSON parsing
- * - Error handling with VolleyError
+ * WalletActivity demonstrates using Volley for HTTP requests via WalletViewModel.
+ * The ViewModel abstracts the Volley implementation details and provides
+ * a clean LiveData interface for the UI layer.
  */
 public class WalletActivity extends AppCompatActivity {
     private static final String TAG = "WalletActivity";
@@ -60,8 +42,9 @@ public class WalletActivity extends AppCompatActivity {
     private ProgressBar progressBar;
 
     // Data
-    private VolleyClient volleyClient;
+    private WalletViewModel viewModel;
     private TransactionAdapter transactionAdapter;
+    private AlertDialog currentDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,10 +55,11 @@ public class WalletActivity extends AppCompatActivity {
         setupToolbar();
         setupRecyclerView();
         setupClickListeners();
+        setupObservers();
 
         // Load data
-        loadWalletBalance();
-        loadTransactions();
+        viewModel.loadWalletBalance();
+        viewModel.loadTransactions();
     }
 
     private void initViews() {
@@ -88,7 +72,49 @@ public class WalletActivity extends AppCompatActivity {
         emptyState = findViewById(R.id.emptyState);
         progressBar = findViewById(R.id.progressBar);
 
-        volleyClient = VolleyClient.getInstance(this);
+        viewModel = new ViewModelProvider(this).get(WalletViewModel.class);
+    }
+
+    private void setupObservers() {
+        viewModel.getWalletBalanceLiveData().observe(this, balance -> {
+            if (balance != null) {
+                balanceText.setText(String.format(Locale.US, "$%.2f", balance.getBalance()));
+                totalCreditsText.setText(String.format(Locale.US, "$%.2f", balance.getTotalCredits()));
+                totalDebitsText.setText(String.format(Locale.US, "$%.2f", balance.getTotalDebits()));
+            }
+        });
+
+        viewModel.getTransactionsLiveData().observe(this, transactions -> {
+            if (transactions != null) {
+                if (transactions.isEmpty()) {
+                    showEmptyState(true);
+                } else {
+                    showEmptyState(false);
+                    transactionAdapter.setTransactions(transactions);
+                }
+            }
+        });
+
+        viewModel.getErrorLiveData().observe(this, error -> {
+            if (error != null) {
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        viewModel.getLoadingLiveData().observe(this, isLoading -> {
+            if (isLoading != null) {
+                showLoading(isLoading);
+            }
+        });
+
+        viewModel.getDepositSuccessLiveData().observe(this, success -> {
+            if (success != null && success) {
+                if (currentDialog != null) {
+                    currentDialog.dismiss();
+                    currentDialog = null;
+                }
+            }
+        });
     }
 
     private void setupToolbar() {
@@ -110,101 +136,6 @@ public class WalletActivity extends AppCompatActivity {
         addFundsButton.setOnClickListener(v -> showAddFundsDialog());
     }
 
-    /**
-     * Load wallet balance using Volley JsonObjectRequest
-     */
-    private void loadWalletBalance() {
-        String url = VolleyClient.BASE_URL + "/api/wallet/balance";
-
-        JsonObjectRequest request = new JsonObjectRequest(
-                Request.Method.GET,
-                url,
-                null,
-                response -> {
-                    try {
-                        WalletBalance balance = WalletBalance.fromJson(response);
-                        updateBalanceUI(balance);
-                        Log.d(TAG, "Balance loaded: $" + balance.getBalance());
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing balance: " + e.getMessage());
-                        Toast.makeText(this, "Error loading balance", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> {
-                    Log.e(TAG, "Error loading balance: " + error.getMessage());
-                    Toast.makeText(this, "Failed to load balance", Toast.LENGTH_SHORT).show();
-                }
-        ) {
-            @Override
-            public Map<String, String> getHeaders() {
-                return volleyClient.getAuthHeaders();
-            }
-        };
-
-        volleyClient.addToRequestQueue(request, TAG);
-    }
-
-    /**
-     * Load transactions using Volley JsonArrayRequest
-     */
-    private void loadTransactions() {
-        showLoading(true);
-        String url = VolleyClient.BASE_URL + "/api/wallet/transactions";
-
-        JsonArrayRequest request = new JsonArrayRequest(
-                Request.Method.GET,
-                url,
-                null,
-                response -> {
-                    showLoading(false);
-                    try {
-                        List<Transaction> transactions = parseTransactions(response);
-                        if (transactions.isEmpty()) {
-                            showEmptyState(true);
-                        } else {
-                            showEmptyState(false);
-                            transactionAdapter.setTransactions(transactions);
-                        }
-                        Log.d(TAG, "Loaded " + transactions.size() + " transactions");
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing transactions: " + e.getMessage());
-                        Toast.makeText(this, "Error loading transactions", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> {
-                    showLoading(false);
-                    Log.e(TAG, "Error loading transactions: " + error.getMessage());
-                    Toast.makeText(this, "Failed to load transactions", Toast.LENGTH_SHORT).show();
-                }
-        ) {
-            @Override
-            public Map<String, String> getHeaders() {
-                return volleyClient.getAuthHeaders();
-            }
-        };
-
-        volleyClient.addToRequestQueue(request, TAG);
-    }
-
-    /**
-     * Parse JSON array into list of Transaction objects
-     * This is done manually with Volley (unlike Retrofit which uses GSON automatically)
-     */
-    private List<Transaction> parseTransactions(JSONArray jsonArray) throws JSONException {
-        List<Transaction> transactions = new ArrayList<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-            transactions.add(Transaction.fromJson(jsonObject));
-        }
-        return transactions;
-    }
-
-    private void updateBalanceUI(WalletBalance balance) {
-        balanceText.setText(String.format(Locale.US, "$%.2f", balance.getBalance()));
-        totalCreditsText.setText(String.format(Locale.US, "$%.2f", balance.getTotalCredits()));
-        totalDebitsText.setText(String.format(Locale.US, "$%.2f", balance.getTotalDebits()));
-    }
-
     private void showAddFundsDialog() {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_funds, null);
 
@@ -216,7 +147,7 @@ public class WalletActivity extends AppCompatActivity {
         MaterialButton cancelButton = dialogView.findViewById(R.id.cancelButton);
         MaterialButton addButton = dialogView.findViewById(R.id.addButton);
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
+        currentDialog = new AlertDialog.Builder(this)
                 .setView(dialogView)
                 .setCancelable(true)
                 .create();
@@ -227,7 +158,12 @@ public class WalletActivity extends AppCompatActivity {
         amount50.setOnClickListener(v -> amountEditText.setText("50"));
         amount100.setOnClickListener(v -> amountEditText.setText("100"));
 
-        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        cancelButton.setOnClickListener(v -> {
+            if (currentDialog != null) {
+                currentDialog.dismiss();
+                currentDialog = null;
+            }
+        });
 
         addButton.setOnClickListener(v -> {
             String amountStr = amountEditText.getText() != null ?
@@ -249,69 +185,13 @@ public class WalletActivity extends AppCompatActivity {
                     return;
                 }
 
-                depositFunds(amount, dialog);
+                viewModel.depositFunds(amount, "Added funds to wallet");
             } catch (NumberFormatException e) {
                 amountEditText.setError("Invalid amount");
             }
         });
 
-        dialog.show();
-    }
-
-    /**
-     * Deposit funds using Volley POST request with JSON body
-     */
-    private void depositFunds(double amount, AlertDialog dialog) {
-        String url = VolleyClient.BASE_URL + "/api/wallet/deposit";
-
-        JSONObject requestBody = new JSONObject();
-        try {
-            requestBody.put("amount", amount);
-            requestBody.put("description", "Added funds to wallet");
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        JsonObjectRequest request = new JsonObjectRequest(
-                Request.Method.POST,
-                url,
-                requestBody,
-                response -> {
-                    try {
-                        boolean success = response.getBoolean("success");
-                        if (success) {
-                            double newBalance = response.getDouble("new_balance");
-                            String message = response.getString("message");
-
-                            // Update UI
-                            balanceText.setText(String.format(Locale.US, "$%.2f", newBalance));
-                            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-
-                            // Reload transactions to show the new one
-                            loadTransactions();
-                            loadWalletBalance();
-
-                            dialog.dismiss();
-                            Log.d(TAG, "Deposit successful: " + message);
-                        }
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing deposit response: " + e.getMessage());
-                        Toast.makeText(this, "Error processing deposit", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> {
-                    Log.e(TAG, "Error depositing funds: " + error.getMessage());
-                    Toast.makeText(this, "Failed to add funds", Toast.LENGTH_SHORT).show();
-                }
-        ) {
-            @Override
-            public Map<String, String> getHeaders() {
-                return volleyClient.getAuthHeaders();
-            }
-        };
-
-        volleyClient.addToRequestQueue(request, TAG);
+        currentDialog.show();
     }
 
     private void showLoading(boolean show) {
@@ -321,12 +201,5 @@ public class WalletActivity extends AppCompatActivity {
     private void showEmptyState(boolean show) {
         emptyState.setVisibility(show ? View.VISIBLE : View.GONE);
         transactionsRecyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Cancel any pending requests
-        volleyClient.cancelRequests(TAG);
     }
 }

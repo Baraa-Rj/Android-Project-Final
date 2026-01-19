@@ -12,20 +12,16 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myapplication.R;
-import com.example.myapplication.data.api.ApiService;
-import com.example.myapplication.data.api.RetrofitClient;
 import com.example.myapplication.data.models.Booking;
 import com.example.myapplication.ui.customer.adapter.BookingAdapter;
+import com.example.myapplication.ui.customer.viewmodel.BookingViewModel;
 
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class CustomerBookingsFragment extends Fragment implements BookingAdapter.OnBookingClickListener {
 
@@ -34,7 +30,7 @@ public class CustomerBookingsFragment extends Fragment implements BookingAdapter
     private TextView emptyText;
 
     private BookingAdapter bookingAdapter;
-    private ApiService apiService;
+    private BookingViewModel viewModel;
 
     @Nullable
     @Override
@@ -48,14 +44,15 @@ public class CustomerBookingsFragment extends Fragment implements BookingAdapter
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
         setupRecyclerView();
-        loadBookings();
+        setupObservers();
+        viewModel.loadBookings();
     }
 
     private void initViews(View view) {
         bookingsRecyclerView = view.findViewById(R.id.bookingsRecyclerView);
         progressBar = view.findViewById(R.id.progressBar);
         emptyText = view.findViewById(R.id.emptyText);
-        apiService = RetrofitClient.getApiService(requireContext());
+        viewModel = new ViewModelProvider(this).get(BookingViewModel.class);
     }
 
     private void setupRecyclerView() {
@@ -64,31 +61,27 @@ public class CustomerBookingsFragment extends Fragment implements BookingAdapter
         bookingsRecyclerView.setAdapter(bookingAdapter);
     }
 
-    private void loadBookings() {
-        showLoading(true);
-
-        apiService.getBookings().enqueue(new Callback<List<Booking>>() {
-            @Override
-            public void onResponse(@NonNull Call<List<Booking>> call, @NonNull Response<List<Booking>> response) {
-                showLoading(false);
-
-                if (response.isSuccessful() && response.body() != null) {
-                    List<Booking> bookings = response.body();
-                    if (bookings.isEmpty()) {
-                        showEmpty(true);
-                    } else {
-                        showEmpty(false);
-                        bookingAdapter.setBookings(bookings);
-                    }
+    private void setupObservers() {
+        viewModel.getBookingsLiveData().observe(getViewLifecycleOwner(), bookings -> {
+            if (bookings != null) {
+                if (bookings.isEmpty()) {
+                    showEmpty(true);
                 } else {
-                    showError("Failed to load bookings");
+                    showEmpty(false);
+                    bookingAdapter.setBookings(bookings);
                 }
             }
+        });
 
-            @Override
-            public void onFailure(@NonNull Call<List<Booking>> call, @NonNull Throwable t) {
-                showLoading(false);
-                showError("Network error: " + t.getMessage());
+        viewModel.getErrorLiveData().observe(getViewLifecycleOwner(), error -> {
+            if (error != null) {
+                Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        viewModel.getLoadingLiveData().observe(getViewLifecycleOwner(), isLoading -> {
+            if (isLoading != null) {
+                showLoading(isLoading);
             }
         });
     }
@@ -101,10 +94,6 @@ public class CustomerBookingsFragment extends Fragment implements BookingAdapter
     private void showEmpty(boolean show) {
         emptyText.setVisibility(show ? View.VISIBLE : View.GONE);
         bookingsRecyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
-    }
-
-    private void showError(String message) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -125,6 +114,6 @@ public class CustomerBookingsFragment extends Fragment implements BookingAdapter
     @Override
     public void onResume() {
         super.onResume();
-        loadBookings();
+        viewModel.loadBookings();
     }
 }
