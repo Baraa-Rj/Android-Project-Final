@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
     // Use 10.0.3.2 for Genymotion Emulator, 10.0.2.2 for Android Studio Emulator
-    private static final String BASE_URL = "http://10.0.2.2:8000/";
+    private static final String BASE_URL = "http://10.0.3.2:8000/";
     private static Retrofit retrofit = null;
     private static ApiService apiService = null;
 
