@@ -25,6 +25,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.Arrays;
 import java.util.List;
 
+import okhttp3.MediaType;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -123,7 +125,11 @@ public class CarListViewModelTest {
         verify(getCarsCall).enqueue(callbackCaptor.capture());
 
         // Simulate failure response
-        callbackCaptor.getValue().onResponse(getCarsCall, Response.error(500, null));
+        ResponseBody errorBody = ResponseBody.create(
+                MediaType.parse("application/json"),
+                "{\"error\":\"Server error\"}"
+        );
+        callbackCaptor.getValue().onResponse(getCarsCall, Response.error(500, errorBody));
 
         // Then
         verify(errorObserver).onChanged("Failed to load cars");
@@ -194,7 +200,11 @@ public class CarListViewModelTest {
         verify(addCarCall).enqueue(callbackCaptor.capture());
 
         // Simulate failure response
-        callbackCaptor.getValue().onResponse(addCarCall, Response.error(400, null));
+        ResponseBody errorBody = ResponseBody.create(
+                MediaType.parse("application/json"),
+                "{\"error\":\"Invalid request\"}"
+        );
+        callbackCaptor.getValue().onResponse(addCarCall, Response.error(400, errorBody));
 
         // Then
         verify(errorObserver).onChanged("Failed to add car");
@@ -241,7 +251,11 @@ public class CarListViewModelTest {
         verify(deleteCarCall).enqueue(callbackCaptor.capture());
 
         // Simulate failure response
-        callbackCaptor.getValue().onResponse(deleteCarCall, Response.error(500, null));
+        ResponseBody errorBody = ResponseBody.create(
+                MediaType.parse("application/json"),
+                "{\"error\":\"Server error\"}"
+        );
+        callbackCaptor.getValue().onResponse(deleteCarCall, Response.error(500, errorBody));
 
         // Then
         verify(errorObserver).onChanged("Failed to delete car");
@@ -264,11 +278,13 @@ public class CarListViewModelTest {
 
         // Then
         ArgumentCaptor<Boolean> loadingCaptor = ArgumentCaptor.forClass(Boolean.class);
-        verify(loadingObserver, atLeast(2)).onChanged(loadingCaptor.capture());
+        verify(loadingObserver, times(3)).onChanged(loadingCaptor.capture());
 
-        // First call should be true (loading started)
-        assertTrue(loadingCaptor.getAllValues().get(0));
-        // Last call should be false (loading stopped)
-        assertFalse(loadingCaptor.getAllValues().get(loadingCaptor.getAllValues().size() - 1));
+        // First call should be false (initial state)
+        assertFalse(loadingCaptor.getAllValues().get(0));
+        // Second call should be true (loading started)
+        assertTrue(loadingCaptor.getAllValues().get(1));
+        // Third call should be false (loading stopped)
+        assertFalse(loadingCaptor.getAllValues().get(2));
     }
 }

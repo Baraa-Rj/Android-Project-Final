@@ -52,7 +52,7 @@ public class TokenManagerTest {
         tokenManager.saveToken(token, userId, email);
 
         // Then
-        verify(editor).putString("auth_token", token);
+        verify(editor).putString("jwt_token", token);
         verify(editor).putInt("user_id", userId);
         verify(editor).putString("user_email", email);
         verify(editor).apply();
@@ -62,7 +62,7 @@ public class TokenManagerTest {
     public void testGetToken_ReturnsStoredToken() {
         // Given
         String expectedToken = "stored-token";
-        when(sharedPreferences.getString("auth_token", null)).thenReturn(expectedToken);
+        when(sharedPreferences.getString("jwt_token", null)).thenReturn(expectedToken);
 
         // When
         String actualToken = tokenManager.getToken();
@@ -74,7 +74,7 @@ public class TokenManagerTest {
     @Test
     public void testGetToken_ReturnsNullWhenNotStored() {
         // Given
-        when(sharedPreferences.getString("auth_token", null)).thenReturn(null);
+        when(sharedPreferences.getString("jwt_token", null)).thenReturn(null);
 
         // When
         String actualToken = tokenManager.getToken();
@@ -136,7 +136,7 @@ public class TokenManagerTest {
     @Test
     public void testIsLoggedIn_ReturnsTrueWhenTokenExists() {
         // Given
-        when(sharedPreferences.getString("auth_token", null)).thenReturn("some-token");
+        when(sharedPreferences.getString("jwt_token", null)).thenReturn("some-token");
 
         // When
         boolean isLoggedIn = tokenManager.isLoggedIn();
@@ -148,7 +148,7 @@ public class TokenManagerTest {
     @Test
     public void testIsLoggedIn_ReturnsFalseWhenTokenDoesNotExist() {
         // Given
-        when(sharedPreferences.getString("auth_token", null)).thenReturn(null);
+        when(sharedPreferences.getString("jwt_token", null)).thenReturn(null);
 
         // When
         boolean isLoggedIn = tokenManager.isLoggedIn();
@@ -160,7 +160,7 @@ public class TokenManagerTest {
     @Test
     public void testIsLoggedIn_ReturnsFalseWhenTokenIsEmpty() {
         // Given
-        when(sharedPreferences.getString("auth_token", null)).thenReturn("");
+        when(sharedPreferences.getString("jwt_token", null)).thenReturn("");
 
         // When
         boolean isLoggedIn = tokenManager.isLoggedIn();
@@ -175,7 +175,7 @@ public class TokenManagerTest {
         tokenManager.clearToken();
 
         // Then
-        verify(editor).remove("auth_token");
+        verify(editor).remove("jwt_token");
         verify(editor).remove("user_id");
         verify(editor).remove("user_email");
         verify(editor).apply();
@@ -187,7 +187,7 @@ public class TokenManagerTest {
         tokenManager.saveToken(null, 0, null);
 
         // Then
-        verify(editor).putString("auth_token", null);
+        verify(editor).putString("jwt_token", null);
         verify(editor).putInt("user_id", 0);
         verify(editor).putString("user_email", null);
         verify(editor).apply();

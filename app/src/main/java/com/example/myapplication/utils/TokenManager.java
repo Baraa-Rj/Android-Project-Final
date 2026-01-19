@@ -44,7 +44,8 @@ public class TokenManager {
     }
 
     public boolean isLoggedIn() {
-        return getToken() != null;
+        String token = getToken();
+        return token != null && !token.isEmpty();
     }
 
     public void saveUser(User user) {

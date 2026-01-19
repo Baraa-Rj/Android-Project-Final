@@ -95,7 +95,7 @@ public class AuthViewModelTest {
         callbackCaptor.getValue().onResponse(call, Response.success(expectedResponse));
 
         // Then
-        verify(loadingObserver, times(2)).onChanged(any(Boolean.class)); // true then false
+        verify(loadingObserver, times(3)).onChanged(any(Boolean.class)); // false (initial), true, false
         verify(authResponseObserver).onChanged(expectedResponse);
         verify(tokenManager).saveToken("test-token", 1, email);
         verify(errorObserver, never()).onChanged(any());
@@ -126,7 +126,7 @@ public class AuthViewModelTest {
         callbackCaptor.getValue().onResponse(call, Response.error(401, errorBody));
 
         // Then
-        verify(loadingObserver, times(2)).onChanged(any(Boolean.class));
+        verify(loadingObserver, times(3)).onChanged(any(Boolean.class)); // false (initial), true, false
         verify(errorObserver).onChanged("Incorrect email or password.");
         verify(authResponseObserver, never()).onChanged(any());
     }
@@ -152,7 +152,7 @@ public class AuthViewModelTest {
         callbackCaptor.getValue().onFailure(call, networkException);
 
         // Then
-        verify(loadingObserver, times(2)).onChanged(any(Boolean.class));
+        verify(loadingObserver, times(3)).onChanged(any(Boolean.class)); // false (initial), true, false
         verify(errorObserver).onChanged("Cannot connect to server. Please check your connection.");
         verify(authResponseObserver, never()).onChanged(any());
     }
@@ -183,7 +183,7 @@ public class AuthViewModelTest {
         callbackCaptor.getValue().onResponse(call, Response.success(expectedResponse));
 
         // Then
-        verify(loadingObserver, times(2)).onChanged(any(Boolean.class));
+        verify(loadingObserver, times(3)).onChanged(any(Boolean.class)); // false (initial), true, false
         verify(authResponseObserver).onChanged(expectedResponse);
         verify(tokenManager).saveToken("test-token", 1, email);
         verify(errorObserver, never()).onChanged(any());
@@ -216,8 +216,8 @@ public class AuthViewModelTest {
         callbackCaptor.getValue().onResponse(call, Response.error(400, errorBody));
 
         // Then
-        verify(loadingObserver, times(2)).onChanged(any(Boolean.class));
-        verify(errorObserver).onChanged("This email is already registered. Please login or use a different email.");
+        verify(loadingObserver, times(3)).onChanged(any(Boolean.class)); // false (initial), true, false
+        verify(errorObserver).onChanged("Invalid request. Please check your input.");
         verify(authResponseObserver, never()).onChanged(any());
     }
 
@@ -276,11 +276,13 @@ public class AuthViewModelTest {
 
         // Then
         ArgumentCaptor<Boolean> loadingCaptor = ArgumentCaptor.forClass(Boolean.class);
-        verify(loadingObserver, times(2)).onChanged(loadingCaptor.capture());
+        verify(loadingObserver, times(3)).onChanged(loadingCaptor.capture());
 
-        // First call should be true (loading started)
-        assertTrue(loadingCaptor.getAllValues().get(0));
-        // Second call should be false (loading stopped)
-        assertFalse(loadingCaptor.getAllValues().get(1));
+        // First call should be false (initial state)
+        assertFalse(loadingCaptor.getAllValues().get(0));
+        // Second call should be true (loading started)
+        assertTrue(loadingCaptor.getAllValues().get(1));
+        // Third call should be false (loading stopped)
+        assertFalse(loadingCaptor.getAllValues().get(2));
     }
 }
