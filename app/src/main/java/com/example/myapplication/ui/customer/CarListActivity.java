@@ -15,11 +15,13 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.myapplication.R;
 import com.example.myapplication.data.models.Car;
 import com.example.myapplication.data.models.CarRequest;
+import com.example.myapplication.data.models.ValidationError;
 import com.example.myapplication.ui.customer.adapter.CarAdapter;
 import com.example.myapplication.ui.customer.viewmodel.CarListViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +38,12 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
     private final List<Car> carList = new ArrayList<>();
     private CarListViewModel viewModel;
     private AlertDialog currentDialog;
+
+    // Dialog field references for error handling
+    private TextInputLayout modelInputLayout;
+    private TextInputLayout plateNumberInputLayout;
+    private TextInputLayout colorInputLayout;
+    private TextInputLayout yearInputLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +69,7 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
 
         viewModel.getErrorLiveData().observe(this, error -> {
             if (error != null) {
-                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+                handleValidationError(error);
             }
         });
 
@@ -138,6 +146,12 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
         // Inflate dialog view ONCE
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_car, null);
 
+        // Get references to TextInputLayouts for error handling
+        modelInputLayout = dialogView.findViewById(R.id.modelInputLayout);
+        plateNumberInputLayout = dialogView.findViewById(R.id.plateNumberInputLayout);
+        colorInputLayout = dialogView.findViewById(R.id.colorInputLayout);
+        yearInputLayout = dialogView.findViewById(R.id.yearInputLayout);
+
         // Get references from the SAME inflated view
         TextInputEditText modelEditText = dialogView.findViewById(R.id.modelEditText);
         TextInputEditText plateNumberEditText = dialogView.findViewById(R.id.plateNumberEditText);
@@ -145,6 +159,9 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
         TextInputEditText yearEditText = dialogView.findViewById(R.id.yearEditText);
         MaterialButton cancelButton = dialogView.findViewById(R.id.cancelButton);
         MaterialButton addButton = dialogView.findViewById(R.id.addButton);
+
+        // Clear any previous errors
+        clearFieldErrors();
 
         // Create dialog with the inflated view
         currentDialog = new AlertDialog.Builder(this)
@@ -160,22 +177,28 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
         });
 
         addButton.setOnClickListener(v -> {
+            // Clear previous errors
+            clearFieldErrors();
+
             String model = Objects.requireNonNull(modelEditText.getText()).toString().trim();
             String plateNumber = Objects.requireNonNull(plateNumberEditText.getText()).toString().trim();
             String color = Objects.requireNonNull(colorEditText.getText()).toString().trim();
             String yearStr = Objects.requireNonNull(yearEditText.getText()).toString().trim();
 
-            // Validation
+            // Client-side validation
             if (model.isEmpty()) {
-                modelEditText.setError("Model is required");
+                modelInputLayout.setError("Model is required");
+                modelInputLayout.setErrorEnabled(true);
                 return;
             }
             if (plateNumber.isEmpty()) {
-                plateNumberEditText.setError("Plate number is required");
+                plateNumberInputLayout.setError("Plate number is required");
+                plateNumberInputLayout.setErrorEnabled(true);
                 return;
             }
             if (color.isEmpty()) {
-                colorEditText.setError("Color is required");
+                colorInputLayout.setError("Color is required");
+                colorInputLayout.setErrorEnabled(true);
                 return;
             }
 
@@ -185,7 +208,8 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
                 try {
                     year = Integer.parseInt(yearStr);
                 } catch (NumberFormatException e) {
-                    yearEditText.setError("Invalid year");
+                    yearInputLayout.setError("Invalid year");
+                    yearInputLayout.setErrorEnabled(true);
                     return;
                 }
             }
@@ -196,5 +220,80 @@ public class CarListActivity extends AppCompatActivity implements CarAdapter.onC
         });
 
         currentDialog.show();
+    }
+
+    private void handleValidationError(ValidationError error) {
+        // Clear all previous errors
+        clearFieldErrors();
+
+        // Show field-specific errors
+        if (error.hasFieldErrors()) {
+            for (String field : error.getAllFieldErrors().keySet()) {
+                String errorMessage = error.getFieldError(field);
+                showFieldError(field, errorMessage);
+            }
+        }
+
+        // Show general error as toast
+        if (error.hasGeneralError()) {
+            Toast.makeText(this, error.getGeneralError(), Toast.LENGTH_LONG).show();
+        }
+        // If only field errors, show a generic toast
+        else if (error.hasFieldErrors()) {
+            Toast.makeText(this, "Please correct the highlighted fields", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showFieldError(String field, String errorMessage) {
+        switch (field) {
+            case "model":
+                if (modelInputLayout != null) {
+                    modelInputLayout.setError(errorMessage);
+                    modelInputLayout.setErrorEnabled(true);
+                }
+                break;
+            case "plate_number":
+            case "plateNumber":
+                if (plateNumberInputLayout != null) {
+                    plateNumberInputLayout.setError(errorMessage);
+                    plateNumberInputLayout.setErrorEnabled(true);
+                }
+                break;
+            case "color":
+                if (colorInputLayout != null) {
+                    colorInputLayout.setError(errorMessage);
+                    colorInputLayout.setErrorEnabled(true);
+                }
+                break;
+            case "year":
+                if (yearInputLayout != null) {
+                    yearInputLayout.setError(errorMessage);
+                    yearInputLayout.setErrorEnabled(true);
+                }
+                break;
+            default:
+                // Unknown field, show in toast
+                Toast.makeText(this, field + ": " + errorMessage, Toast.LENGTH_LONG).show();
+                break;
+        }
+    }
+
+    private void clearFieldErrors() {
+        if (modelInputLayout != null) {
+            modelInputLayout.setError(null);
+            modelInputLayout.setErrorEnabled(false);
+        }
+        if (plateNumberInputLayout != null) {
+            plateNumberInputLayout.setError(null);
+            plateNumberInputLayout.setErrorEnabled(false);
+        }
+        if (colorInputLayout != null) {
+            colorInputLayout.setError(null);
+            colorInputLayout.setErrorEnabled(false);
+        }
+        if (yearInputLayout != null) {
+            yearInputLayout.setError(null);
+            yearInputLayout.setErrorEnabled(false);
+        }
     }
 }

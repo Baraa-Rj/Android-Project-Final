@@ -10,7 +10,9 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.myapplication.data.models.Car;
 import com.example.myapplication.data.models.CarRequest;
+import com.example.myapplication.data.models.ValidationError;
 import com.example.myapplication.data.repository.CarRepository;
+import com.example.myapplication.utils.ValidationErrorParser;
 
 import java.util.List;
 
@@ -23,7 +25,7 @@ public class CarListViewModel extends AndroidViewModel {
 
     private final CarRepository carRepository;
     private final MutableLiveData<List<Car>> carsLiveData = new MutableLiveData<>();
-    private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private final MutableLiveData<ValidationError> errorLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> loadingLiveData = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> carAddedLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> carDeletedLiveData = new MutableLiveData<>();
@@ -49,7 +51,7 @@ public class CarListViewModel extends AndroidViewModel {
         return carsLiveData;
     }
 
-    public LiveData<String> getErrorLiveData() {
+    public LiveData<ValidationError> getErrorLiveData() {
         return errorLiveData;
     }
 
@@ -80,7 +82,8 @@ public class CarListViewModel extends AndroidViewModel {
                     Log.d(TAG, "Loaded " + cars.size() + " cars");
                 } else {
                     Log.e(TAG, "Failed to load cars: " + response.code());
-                    errorLiveData.setValue("Failed to load cars");
+                    ValidationError validationError = ValidationErrorParser.parseError(response);
+                    errorLiveData.setValue(validationError);
                 }
                 loadCarsCall = null;
             }
@@ -88,9 +91,10 @@ public class CarListViewModel extends AndroidViewModel {
             @Override
             public void onFailure(@NonNull Call<List<Car>> call, @NonNull Throwable t) {
                 loadingLiveData.setValue(false);
-                String errorMessage = "Connection failed. Please check your internet connection.";
                 Log.e(TAG, "Error loading cars: " + t.getMessage());
-                errorLiveData.setValue(errorMessage);
+                ValidationError validationError = new ValidationError();
+                validationError.setGeneralError("Connection failed. Please check your internet connection.");
+                errorLiveData.setValue(validationError);
                 loadCarsCall = null;
             }
         });
@@ -112,7 +116,8 @@ public class CarListViewModel extends AndroidViewModel {
                     loadCars();
                 } else {
                     Log.e(TAG, "Failed to add car: " + response.code());
-                    errorLiveData.setValue("Failed to add car");
+                    ValidationError validationError = ValidationErrorParser.parseError(response);
+                    errorLiveData.setValue(validationError);
                 }
                 addCarCall = null;
             }
@@ -120,9 +125,10 @@ public class CarListViewModel extends AndroidViewModel {
             @Override
             public void onFailure(@NonNull Call<Car> call, @NonNull Throwable t) {
                 loadingLiveData.setValue(false);
-                String errorMessage = "Connection failed. Please check your internet connection.";
                 Log.e(TAG, "Error adding car: " + t.getMessage());
-                errorLiveData.setValue(errorMessage);
+                ValidationError validationError = new ValidationError();
+                validationError.setGeneralError("Connection failed. Please check your internet connection.");
+                errorLiveData.setValue(validationError);
                 addCarCall = null;
             }
         });
@@ -144,7 +150,8 @@ public class CarListViewModel extends AndroidViewModel {
                     loadCars();
                 } else {
                     Log.e(TAG, "Failed to delete car: " + response.code());
-                    errorLiveData.setValue("Failed to delete car");
+                    ValidationError validationError = ValidationErrorParser.parseError(response);
+                    errorLiveData.setValue(validationError);
                 }
                 deleteCarCall = null;
             }
@@ -152,9 +159,10 @@ public class CarListViewModel extends AndroidViewModel {
             @Override
             public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                 loadingLiveData.setValue(false);
-                String errorMessage = "Connection failed. Please check your internet connection.";
                 Log.e(TAG, "Error deleting car: " + t.getMessage());
-                errorLiveData.setValue(errorMessage);
+                ValidationError validationError = new ValidationError();
+                validationError.setGeneralError("Connection failed. Please check your internet connection.");
+                errorLiveData.setValue(validationError);
                 deleteCarCall = null;
             }
         });
