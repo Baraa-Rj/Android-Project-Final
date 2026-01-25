@@ -79,7 +79,7 @@ public interface ApiService {
     Call<List<User>> getTeamMembers(@Path("id") int teamId);
 
     @POST("api/teams/{id}/members")
-    Call<Void> addTeamMember(@Path("id") int teamId, @Body User user);
+    Call<Void> addTeamMember(@Path("id") int teamId, @Body java.util.Map<String, Integer> requestBody);
 
     @DELETE("api/teams/{teamId}/members/{userId}")
     Call<Void> removeTeamMember(@Path("teamId") int teamId, @Path("userId") int userId);
