@@ -7,11 +7,11 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 import retrofit2.http.GET;
 import retrofit2.http.PUT;
+import retrofit2.http.PATCH;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.DELETE;
 
-import com.example.myapplication.data.models.StatusUpdateRequest;
 import com.example.myapplication.data.models.Service;
 import com.example.myapplication.data.models.User;
 import com.example.myapplication.data.models.LoginRequest;
@@ -61,6 +61,6 @@ public interface ApiService {
     @PUT("api/bookings/{id}/reschedule")
     Call<Booking> rescheduleBooking(@Path("id") int id, @Body RescheduleRequest request);
 
-    @PUT("api/bookings/{id}/status")
-    Call<Booking> updateBookingStatus(@Path("id") int id, @Body StatusUpdateRequest request);
+    @PATCH("api/bookings/{id}/status")
+    Call<Booking> updateBookingStatus(@Path("id") int id, @Query("status") String status);
 }
