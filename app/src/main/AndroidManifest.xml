@@ -24,6 +24,7 @@
 
         <activity android:name=".ui.customer.WalletActivity" android:exported="false" android:parentActivityName=".ui.customer.CustomerActivity" />
         <activity android:name=".ui.manager.ManagerActivity" android:exported="false" />
+        <activity android:name=".ui.manager.TeamDetailActivity" android:exported="false" android:parentActivityName=".ui.manager.ManagerActivity" />
         <activity android:name=".ui.employee.EmployeeActivity" android:exported="false" />
 
     </application>

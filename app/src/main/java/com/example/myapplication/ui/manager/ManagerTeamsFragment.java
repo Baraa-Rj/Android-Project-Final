@@ -1,6 +1,7 @@
 package com.example.myapplication.ui.manager;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -135,6 +136,10 @@ public class ManagerTeamsFragment extends Fragment {
     }
 
     private void onTeamClick(Team team) {
-        Toast.makeText(getContext(), "Team: " + team.getName(), Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(getContext(), TeamDetailActivity.class);
+        intent.putExtra("team_id", team.getId());
+        intent.putExtra("team_name", team.getName());
+        intent.putExtra("team_description", team.getDescription());
+        startActivity(intent);
     }
 }
