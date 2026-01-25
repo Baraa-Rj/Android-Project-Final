@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 import mysql.connector
 from models.BookingCreate import BookingCreate
 from database import get_db_connection
-from dependencies import CurrentUser, get_current_user, get_employee_or_manager
+from dependencies import CurrentUser, get_current_user, get_employee_or_manager, get_manager
 
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
 

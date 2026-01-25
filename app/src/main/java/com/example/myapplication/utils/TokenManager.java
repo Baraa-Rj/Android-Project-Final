@@ -60,10 +60,7 @@ public class TokenManager {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt(USER_ID_KEY, user.getId());
         editor.putString(USER_EMAIL_KEY, user.getEmail());
-        editor.putString(USER_ROLE_KEY, user.getRole());
-        if (user.getTeamId() != null) {
-            editor.putInt(TEAM_ID_KEY, user.getTeamId());
-        }
+        editor.putString(USER_ROLE_KEY, user.getRole().name().toLowerCase());
         editor.apply();
     }
 

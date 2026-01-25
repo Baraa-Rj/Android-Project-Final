@@ -58,9 +58,9 @@ def get_team_members(
 @router.post("")
 def create_team(
     team: dict,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    current_user: CurrentUser = Depends(get_manager)
 ):
-    """Create a new team - Requires employee or manager role"""
+    """Create a new team - Requires manager role"""
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute(
@@ -78,9 +78,9 @@ def create_team(
 def edit_team(
     team_id: int,
     team: dict,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    current_user: CurrentUser = Depends(get_manager)
 ):
-    """Update team - Requires employee or manager role"""
+    """Update team - Requires manager role"""
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute(
@@ -112,9 +112,9 @@ def delete_team(
 def add_team_member(
     team_id: int,
     member: dict,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    current_user: CurrentUser = Depends(get_manager)
 ):
-    """Add member to team - Requires employee or manager role"""
+    """Add member to team - Requires manager role"""
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute(
@@ -131,9 +131,9 @@ def add_team_member(
 def remove_team_member(
     team_id: int,
     user_id: int,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    current_user: CurrentUser = Depends(get_manager)
 ):
-    """Remove member from team - Requires employee or manager role"""
+    """Remove member from team - Requires manager role"""
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute(

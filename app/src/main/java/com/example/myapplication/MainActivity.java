@@ -38,9 +38,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadInitialFragment() {
         if (tokenManager.getToken() != null) {
-            // User is logged in, navigate to CustomerActivity
-            Log.d(TAG, "loadInitialFragment: User is logged in, navigating to CustomerActivity");
-            Intent intent = new Intent(this, CustomerActivity.class);
+            // User is logged in, navigate based on role
+            String role = tokenManager.getUserRole();
+            Log.d(TAG, "loadInitialFragment: User is logged in with role: " + role);
+
+            Intent intent;
+            if ("employee".equalsIgnoreCase(role)) {
+                intent = new Intent(this, com.example.myapplication.ui.employee.EmployeeActivity.class);
+            } else if ("manager".equalsIgnoreCase(role)) {
+                intent = new Intent(this, com.example.myapplication.ui.manager.ManagerActivity.class);
+            } else {
+                intent = new Intent(this, CustomerActivity.class);
+            }
+
             startActivity(intent);
             finish();
         } else {

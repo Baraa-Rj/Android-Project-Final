@@ -58,7 +58,7 @@ public class ManagerTeamsFragment extends Fragment {
 
     private void loadTeams() {
         progressBar.setVisibility(View.VISIBLE);
-        RetrofitClient.getApiService().getTeams().enqueue(new Callback<List<Team>>() {
+        RetrofitClient.getApiService(requireContext()).getTeams().enqueue(new Callback<List<Team>>() {
             @Override
             public void onResponse(Call<List<Team>> call, Response<List<Team>> response) {
                 progressBar.setVisibility(View.GONE);
@@ -115,7 +115,7 @@ public class ManagerTeamsFragment extends Fragment {
         newTeam.setDescription(description);
 
         progressBar.setVisibility(View.VISIBLE);
-        RetrofitClient.getApiService().createTeam(newTeam).enqueue(new Callback<Team>() {
+        RetrofitClient.getApiService(requireContext()).createTeam(newTeam).enqueue(new Callback<Team>() {
             @Override
             public void onResponse(Call<Team> call, Response<Team> response) {
                 progressBar.setVisibility(View.GONE);
