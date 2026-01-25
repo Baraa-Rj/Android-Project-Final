@@ -10,16 +10,18 @@ public class TokenManager {
     private static final String TOKEN_KEY = "jwt_token";
     private static final String USER_ID_KEY = "user_id";
     private static final String USER_EMAIL_KEY = "user_email";
+    private static final String USER_ROLE_KEY = "user_role";
 
     public TokenManager(Context context) {
         this.sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
     }
 
-    public void saveToken(String token, int userId, String userEmail) {
+    public void saveToken(String token, int userId, String userEmail, String userRole) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(TOKEN_KEY, token);
         editor.putInt(USER_ID_KEY, userId);
         editor.putString(USER_EMAIL_KEY, userEmail);
+        editor.putString(USER_ROLE_KEY, userRole);
         editor.apply();
     }
 
@@ -40,6 +42,7 @@ public class TokenManager {
         editor.remove(TOKEN_KEY);
         editor.remove(USER_ID_KEY);
         editor.remove(USER_EMAIL_KEY);
+        editor.remove(USER_ROLE_KEY);
         editor.apply();
     }
 
@@ -52,9 +55,16 @@ public class TokenManager {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt(USER_ID_KEY, user.getId());
         editor.putString(USER_EMAIL_KEY, user.getEmail());
+        editor.putString(USER_ROLE_KEY, user.getRole());
         editor.apply();
     }
+
+    public String getUserRole() {
+        return sharedPreferences.getString(USER_ROLE_KEY, null);
+    }
+
     public static TokenManager getInstance(Context context) {
         return new TokenManager(context);
     }
+
 }
