@@ -31,4 +31,8 @@ public class BookingRepository {
     public Call<Booking> rescheduleBooking(int bookingId, RescheduleRequest request) {
         return apiService.rescheduleBooking(bookingId, request);
     }
+
+    public Call<Booking> updateBookingStatus(int bookingId, String status) {
+        return apiService.updateBookingStatus(bookingId, status);
+    }
 }
