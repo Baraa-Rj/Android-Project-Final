@@ -84,7 +84,7 @@ public class TeamDetailActivity extends AppCompatActivity {
     }
 
     private void loadAllUsers() {
-        RetrofitClient.getApiService().getUsers().enqueue(new Callback<List<User>>() {
+        RetrofitClient.getApiService(this).getUsers().enqueue(new Callback<List<User>>() {
             @Override
             public void onResponse(Call<List<User>> call, Response<List<User>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -101,7 +101,7 @@ public class TeamDetailActivity extends AppCompatActivity {
 
     private void loadTeamMembers() {
         progressBar.setVisibility(View.VISIBLE);
-        RetrofitClient.getApiService().getTeamMembers(team.getId()).enqueue(new Callback<List<User>>() {
+        RetrofitClient.getApiService(this).getTeamMembers(team.getId()).enqueue(new Callback<List<User>>() {
             @Override
             public void onResponse(Call<List<User>> call, Response<List<User>> response) {
                 progressBar.setVisibility(View.GONE);
@@ -173,7 +173,7 @@ public class TeamDetailActivity extends AppCompatActivity {
         Map<String, Integer> requestBody = new HashMap<>();
         requestBody.put("user_id", user.getId());
 
-        RetrofitClient.getApiService().addTeamMember(team.getId(), requestBody).enqueue(new Callback<Void>() {
+        RetrofitClient.getApiService(this).addTeamMember(team.getId(), requestBody).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 progressBar.setVisibility(View.GONE);
@@ -204,7 +204,7 @@ public class TeamDetailActivity extends AppCompatActivity {
 
     private void removeMemberFromTeam(User user) {
         progressBar.setVisibility(View.VISIBLE);
-        RetrofitClient.getApiService().removeTeamMember(team.getId(), user.getId()).enqueue(new Callback<Void>() {
+        RetrofitClient.getApiService(this).removeTeamMember(team.getId(), user.getId()).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 progressBar.setVisibility(View.GONE);

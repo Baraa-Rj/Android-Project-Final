@@ -49,6 +49,15 @@ public interface ApiService {
     @GET("api/services")
     Call<List<Service>> getServices();
 
+    @POST("api/services")
+    Call<Service> createService(@Body Service service);
+
+    @PUT("api/services/{id}")
+    Call<Service> updateService(@Path("id") int id, @Body Service service);
+
+    @DELETE("api/services/{id}")
+    Call<Void> deleteService(@Path("id") int id);
+
     // Bookings
     @GET("api/bookings")
     Call<List<Booking>> getBookings();
@@ -87,4 +96,7 @@ public interface ApiService {
     // Users
     @GET("api/users")
     Call<List<User>> getUsers();
+    
+    @GET("api/users/{userId}")
+    Call<User> getUser(@Path("userId") int userId);
 }

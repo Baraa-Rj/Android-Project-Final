@@ -19,19 +19,29 @@ public class Service {
     private int duration;
 
     @SerializedName("is_active")
-    private boolean isActive;
+    private int isActive;
+
+    @SerializedName("created_at")
+    private String createdAt;
+
+    @SerializedName("updated_at")
+    private String updatedAt;
 
     public int getId() { return id; }
     public String getName() { return name; }
     public String getDescription() { return description; }
     public double getPrice() { return price; }
     public int getDuration() { return duration; }
-    public boolean isActive() { return isActive; }
+    public boolean isActive() { return isActive == 1; }
+    public String getCreatedAt() { return createdAt; }
+    public String getUpdatedAt() { return updatedAt; }
 
     public void setId(int id) { this.id = id; }
     public void setName(String name) { this.name = name; }
     public void setDescription(String description) { this.description = description; }
     public void setPrice(double price) { this.price = price; }
     public void setDuration(int duration) { this.duration = duration; }
-    public void setActive(boolean active) { isActive = active; }
+    public void setActive(boolean active) { isActive = active ? 1 : 0; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
 }

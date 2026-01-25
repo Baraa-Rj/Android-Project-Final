@@ -54,7 +54,7 @@ public class ManagerBookingsFragment extends Fragment {
     }
 
     private void loadTeams() {
-        RetrofitClient.getApiService().getTeams().enqueue(new Callback<List<Team>>() {
+        RetrofitClient.getApiService(requireContext()).getTeams().enqueue(new Callback<List<Team>>() {
             @Override
             public void onResponse(Call<List<Team>> call, Response<List<Team>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -71,7 +71,7 @@ public class ManagerBookingsFragment extends Fragment {
 
     private void loadBookings() {
         progressBar.setVisibility(View.VISIBLE);
-        RetrofitClient.getApiService().getBookings().enqueue(new Callback<List<Booking>>() {
+        RetrofitClient.getApiService(requireContext()).getBookings().enqueue(new Callback<List<Booking>>() {
             @Override
             public void onResponse(Call<List<Booking>> call, Response<List<Booking>> response) {
                 progressBar.setVisibility(View.GONE);
@@ -126,7 +126,7 @@ public class ManagerBookingsFragment extends Fragment {
 
     private void assignTeam(int bookingId, int teamId) {
         progressBar.setVisibility(View.VISIBLE);
-        RetrofitClient.getApiService().assignTeamToBooking(bookingId, teamId).enqueue(new Callback<Booking>() {
+        RetrofitClient.getApiService(requireContext()).assignTeamToBooking(bookingId, teamId).enqueue(new Callback<Booking>() {
             @Override
             public void onResponse(Call<Booking> call, Response<Booking> response) {
                 progressBar.setVisibility(View.GONE);
