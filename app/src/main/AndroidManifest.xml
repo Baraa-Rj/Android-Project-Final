@@ -15,6 +15,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
         <activity
+            android:name=".ui.Employee.EmployeeJobDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.Employee.EmployeeJobsFragment"
+            android:exported="false" />
+        <activity
+            android:name=".ui.Employee.EmployeeJobsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.Employee.EmployeeActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
@@ -22,32 +34,22 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- Customer Activity with Bottom Navigation -->
+        </activity> <!-- Customer Activity with Bottom Navigation -->
         <activity
             android:name=".ui.customer.CustomerActivity"
-            android:exported="false" />
-
-        <!-- Car List Activity -->
+            android:exported="false" /> <!-- Car List Activity -->
         <activity
             android:name=".ui.customer.CarListActivity"
             android:exported="false"
-            android:parentActivityName=".ui.customer.CustomerActivity" />
-
-        <!-- Booking Activity -->
+            android:parentActivityName=".ui.customer.CustomerActivity" /> <!-- Booking Activity -->
         <activity
             android:name=".ui.customer.BookingActivity"
             android:exported="false"
-            android:parentActivityName=".ui.customer.CustomerActivity" />
-
-        <!-- Booking Detail Activity -->
+            android:parentActivityName=".ui.customer.CustomerActivity" /> <!-- Booking Detail Activity -->
         <activity
             android:name=".ui.customer.BookingDetailActivity"
             android:exported="false"
-            android:parentActivityName=".ui.customer.CustomerActivity" />
-
-        <!-- Wallet Activity -->
+            android:parentActivityName=".ui.customer.CustomerActivity" /> <!-- Wallet Activity -->
         <activity
             android:name=".ui.customer.WalletActivity"
             android:exported="false"

@@ -29,4 +29,30 @@
     <string name="plate_number">Plate Number</string>
     <string name="car_model_e_g_toyota_camry">Car Model (e.g. Toyota Camry)</string>
     <string name="add_new_car">Add New Car</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Employee Module Strings -->
+    <string name="jobs">Jobs</string>
+    <string name="profileemp">Profile</string>
+    <string name="my_jobs">My Jobs</string>
+    <string name="job_details">Job Details</string>
+    <string name="customer_information">Customer Information</string>
+    <string name="service_details">Service Details</string>
+    <string name="start_job">Start Job</string>
+    <string name="complete_job">Complete Job</string>
+    <string name="call_customer">Call Customer</string>
+    <string name="navigate">Navigate</string>
+    <string name="completion_notes">Completion Notes (Optional)</string>
+    <string name="no_jobs_available">No jobs available</string>
+    <string name="all">All</string>
+    <string name="assigned">Assigned</string>
+    <string name="in_progress">In Progress</string>
+    <string name="completed">Completed</string>
+    <string name="performance">Performance</string>
+    <string name="total_jobs">Total Jobs</string>
+    <string name="today">Today</string>
+    <string name="rating">Rating</string>
+    <string name="logoutemp">Logout</string>
+
 </resources>

@@ -11,7 +11,11 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.DELETE;
 
+import com.example.myapplication.data.models.Employee;
+import com.example.myapplication.data.models.EmployeeBooking;
+import com.example.myapplication.data.models.EmployeeStats;
 import com.example.myapplication.data.models.Service;
+import com.example.myapplication.data.models.StatusUpdateRequest;
 import com.example.myapplication.data.models.User;
 import com.example.myapplication.data.models.LoginRequest;
 import com.example.myapplication.data.models.RegisterRequest;
@@ -59,4 +63,20 @@ public interface ApiService {
 
     @PUT("api/bookings/{id}/reschedule")
     Call<Booking> rescheduleBooking(@Path("id") int id, @Body RescheduleRequest request);
+
+    // Employee endpoints
+    @GET("api/employee/bookings")
+    Call<List<EmployeeBooking>> getEmployeeBookings(@Query("status") String status);
+
+    @PUT("api/bookings/{id}/status")
+    Call<Booking> updateBookingStatus(@Path("id") int bookingId, @Body StatusUpdateRequest request);
+
+    @GET("api/employee/profile")
+    Call<Employee> getEmployeeProfile();
+
+    @PUT("api/employee/status")
+    Call<Employee> updateEmployeeStatus(@Body StatusUpdateRequest request);
+
+    @GET("api/employee/stats")
+    Call<EmployeeStats> getEmployeeStats();
 }
