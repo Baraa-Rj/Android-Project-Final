@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.myapplication.R;
 import com.example.myapplication.data.api.RetrofitClient;
 import com.example.myapplication.data.models.Service;
+import com.example.myapplication.ui.manager.adapter.ManagerServiceAdapter;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.List;
 import retrofit2.Call;

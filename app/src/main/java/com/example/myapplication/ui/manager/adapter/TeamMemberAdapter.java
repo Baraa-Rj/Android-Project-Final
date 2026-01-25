@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.manager;
+package com.example.myapplication.ui.manager.adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,7 +15,7 @@ import java.util.List;
 public class TeamMemberAdapter extends RecyclerView.Adapter<TeamMemberAdapter.MemberViewHolder> {
 
     private List<User> members = new ArrayList<>();
-    private OnMemberActionListener listener;
+    private final OnMemberActionListener listener;
 
     public interface OnMemberActionListener {
         void onRemoveMember(User user);

@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.manager;
+package com.example.myapplication.ui.manager.adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;
