@@ -62,7 +62,6 @@ public class LoginFragment extends Fragment {
         setupClickListeners();
         observeViewModel();
 
-        // Restore saved state if available
         if (savedInstanceState != null) {
             restoreInstanceState(savedInstanceState);
         }
@@ -74,36 +73,30 @@ public class LoginFragment extends Fragment {
     }
 
     private void observeViewModel() {
-        authViewModel.getAuthResponseLiveData().observe(getViewLifecycleOwner(), authResponse -> {
-            if (authResponse != null) {
-                Log.d(TAG, "Login successful for user: " + authResponse.getEmail());
-                Toast.makeText(getContext(), "Login Successful!", Toast.LENGTH_SHORT).show();
+       authViewModel.getAuthResponseLiveData().observe(getViewLifecycleOwner(), authResponse -> {
+    if (authResponse != null) {
+        Log.d(TAG, "Login successful for user: " + authResponse.getEmail());
+        Toast.makeText(getContext(), "Login Successful!", Toast.LENGTH_SHORT).show();
 
-                // Navigate to CustomerActivity using Intent
-                Intent intent = new Intent(requireContext(), CustomerActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
+        Intent intent;
+        String role = authResponse.getRole();
+        
+        if ("employee".equalsIgnoreCase(role)) {
+            intent = new Intent(requireContext(), com.example.myapplication.ui.employee.EmployeeActivity.class);
+        } else if ("manager".equalsIgnoreCase(role)) {
+            intent = new Intent(requireContext(), com.example.myapplication.ui.manager.ManagerActivity.class);
+        } else {
+            intent = new Intent(requireContext(), CustomerActivity.class);
+        }
+        
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
 
-                // Finish MainActivity
-                if (getActivity() != null) {
-                    getActivity().finish();
-                }
-            }
-        });
-
-        authViewModel.getErrorLiveData().observe(getViewLifecycleOwner(), errorMessage -> {
-            if (errorMessage != null) {
-                Log.e(TAG, "Login error: " + errorMessage);
-                Toast.makeText(getContext(), "Error: " + errorMessage, Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        authViewModel.getLoadingLiveData().observe(getViewLifecycleOwner(), isLoading -> {
-            // Disable button during loading to prevent multiple submissions
-            loginButton.setEnabled(!isLoading);
-            Log.d(TAG, "Loading state: " + isLoading);
-        });
+       if (getActivity() != null) {
+            getActivity().finish();
+        }
     }
+});
 
     @Override
     public void onStart() {

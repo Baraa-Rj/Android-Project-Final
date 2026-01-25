@@ -146,10 +146,10 @@ public class AuthViewModel extends AndroidViewModel {
                     AuthResponse authResponse = response.body();
                     Log.d(TAG, "login: Login successful for user: " + authResponse.getEmail());
                     tokenManager.saveToken(
-                        authResponse.getToken(),
-                        authResponse.getId(),
-                        authResponse.getEmail()
-                    );
+                            authResponse.getToken(),
+                            authResponse.getId(),
+                            authResponse.getEmail(),
+                            authResponse.getRole());
                     authResponseLiveData.setValue(authResponse);
                 } else {
                     String errorMsg = parseErrorMessage(response);
@@ -186,10 +186,10 @@ public class AuthViewModel extends AndroidViewModel {
                     AuthResponse authResponse = response.body();
                     Log.d(TAG, "register: Registration successful for user: " + authResponse.getEmail());
                     tokenManager.saveToken(
-                        authResponse.getToken(),
-                        authResponse.getId(),
-                        authResponse.getEmail()
-                    );
+                            authResponse.getToken(),
+                            authResponse.getId(),
+                            authResponse.getEmail(),
+                            authResponse.getRole());
                     authResponseLiveData.setValue(authResponse);
                 } else {
                     String errorMsg = parseErrorMessage(response);
