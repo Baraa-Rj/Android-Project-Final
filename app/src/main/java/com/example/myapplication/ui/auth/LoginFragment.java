@@ -73,30 +73,31 @@ public class LoginFragment extends Fragment {
     }
 
     private void observeViewModel() {
-       authViewModel.getAuthResponseLiveData().observe(getViewLifecycleOwner(), authResponse -> {
-    if (authResponse != null) {
-        Log.d(TAG, "Login successful for user: " + authResponse.getEmail());
-        Toast.makeText(getContext(), "Login Successful!", Toast.LENGTH_SHORT).show();
+        authViewModel.getAuthResponseLiveData().observe(getViewLifecycleOwner(), authResponse -> {
+            if (authResponse != null) {
+                Log.d(TAG, "Login successful for user: " + authResponse.getEmail());
+                Toast.makeText(getContext(), "Login Successful!", Toast.LENGTH_SHORT).show();
 
-        Intent intent;
-        String role = authResponse.getRole();
-        
-        if ("employee".equalsIgnoreCase(role)) {
-            intent = new Intent(requireContext(), com.example.myapplication.ui.employee.EmployeeActivity.class);
-        } else if ("manager".equalsIgnoreCase(role)) {
-            intent = new Intent(requireContext(), com.example.myapplication.ui.manager.ManagerActivity.class);
-        } else {
-            intent = new Intent(requireContext(), CustomerActivity.class);
-        }
-        
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+                Intent intent;
+                String role = authResponse.getRole();
 
-       if (getActivity() != null) {
-            getActivity().finish();
-        }
+                if ("employee".equalsIgnoreCase(role)) {
+                    intent = new Intent(requireContext(), com.example.myapplication.ui.employee.EmployeeActivity.class);
+                } else if ("manager".equalsIgnoreCase(role)) {
+                    intent = new Intent(requireContext(), com.example.myapplication.ui.manager.ManagerActivity.class);
+                } else {
+                    intent = new Intent(requireContext(), CustomerActivity.class);
+                }
+
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+
+                if (getActivity() != null) {
+                    getActivity().finish();
+                }
+            }
+        });
     }
-});
 
     @Override
     public void onStart() {
