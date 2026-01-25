@@ -125,8 +125,31 @@ def create_booking(
         )
 
     db = get_db_connection()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
     try:
+        # Check wallet balance for customers
+        if current_user.role == "customer":
+            # Calculate current balance
+            cursor.execute(
+                """
+                SELECT
+                    COALESCE(SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END), 0) -
+                    COALESCE(SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END), 0) as balance
+                FROM transactions
+                WHERE user_id = %s
+                """,
+                (current_user.id,),
+            )
+            result = cursor.fetchone()
+            balance = float(result["balance"]) if result["balance"] else 0.0
+
+            if balance < booking.total_price:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Insufficient wallet balance. Required: ${booking.total_price:.2f}, Available: ${balance:.2f}",
+                )
+
+        # Create booking
         cursor.execute(
             """INSERT INTO bookings (user_id, car_id, service_id, team_id, vehicle_id,
             location, location_lat, location_lng, scheduled_time, total_price, notes)
@@ -145,8 +168,22 @@ def create_booking(
                 booking.notes,
             ),
         )
-        db.commit()
         booking_id = cursor.lastrowid
+
+        # Create debit transaction for customers
+        if current_user.role == "customer":
+            cursor.execute(
+                """INSERT INTO transactions (user_id, booking_id, amount, type, description)
+                VALUES (%s, %s, %s, 'debit', %s)""",
+                (
+                    current_user.id,
+                    booking_id,
+                    booking.total_price,
+                    f"Payment for booking #{booking_id}",
+                ),
+            )
+
+        db.commit()
     except mysql.connector.Error as err:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {err}")

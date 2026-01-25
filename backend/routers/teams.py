@@ -10,6 +10,46 @@ from dependencies import (
 router = APIRouter(prefix="/api/teams", tags=["teams"])
 
 
+@router.get("/my-team")
+def get_my_team(current_user: CurrentUser = Depends(get_current_user)):
+    """Get current user's team and team members"""
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+
+    # Get employee's team
+    cursor.execute(
+        "SELECT team_id FROM team_members WHERE user_id = %s",
+        (current_user.id,)
+    )
+    team_result = cursor.fetchone()
+
+    if not team_result or not team_result['team_id']:
+        cursor.close()
+        db.close()
+        return {"team": None, "members": []}
+
+    team_id = team_result['team_id']
+
+    # Get team details
+    cursor.execute("SELECT * FROM teams WHERE id = %s", (team_id,))
+    team = cursor.fetchone()
+
+    # Get team members
+    cursor.execute(
+        """SELECT users.id, users.name, users.email, users.phone, users.role
+           FROM users
+           JOIN team_members ON users.id = team_members.user_id
+           WHERE team_members.team_id = %s""",
+        (team_id,)
+    )
+    members = cursor.fetchall()
+
+    cursor.close()
+    db.close()
+
+    return {"team": team, "members": members}
+
+
 @router.get("")
 def get_teams(current_user: CurrentUser = Depends(get_current_user)):
     """Get all teams - Available to all authenticated users"""

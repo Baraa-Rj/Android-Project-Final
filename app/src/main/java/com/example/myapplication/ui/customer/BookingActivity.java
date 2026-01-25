@@ -3,6 +3,7 @@ package com.example.myapplication.ui.customer;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
@@ -14,7 +15,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.myapplication.R;
+import com.example.myapplication.data.api.VolleyClient;
 import com.example.myapplication.data.models.BookingRequest;
 import com.example.myapplication.data.models.Car;
 import com.example.myapplication.data.models.ValidationError;
@@ -25,11 +29,14 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.example.myapplication.utils.TokenManager;
 
+import org.json.JSONException;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class BookingActivity extends AppCompatActivity {
     private static final String TAG = "BookingActivity";
@@ -65,6 +72,7 @@ public class BookingActivity extends AppCompatActivity {
     private List<Car> carList = new ArrayList<>();
     private int serviceId;
     private double serviceServicePrice;
+    private double walletBalance = 0.0;
     private Calendar selectedDateTime = Calendar.getInstance();
     private boolean dateSelected = false;
     private boolean timeSelected = false;
@@ -79,6 +87,7 @@ public class BookingActivity extends AppCompatActivity {
         loadServiceData();
         setupObservers();
         setupClickListeners();
+        loadWalletBalance();
         carListViewModel.loadCars();
     }
 
@@ -264,6 +273,37 @@ public class BookingActivity extends AppCompatActivity {
         timeButton.setText(timeFormat.format(selectedDateTime.getTime()));
     }
 
+    private void loadWalletBalance() {
+        String url = VolleyClient.BASE_URL + "/api/wallet/balance";
+        VolleyClient volleyClient = VolleyClient.getInstance(this);
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        walletBalance = response.getDouble("balance");
+                        Log.d(TAG, "Wallet balance loaded: $" + walletBalance);
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing balance: " + e.getMessage());
+                        walletBalance = 0.0;
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Error loading balance: " + (error.getMessage() != null ? error.getMessage() : "Unknown error"));
+                    walletBalance = 0.0;
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return volleyClient.getAuthHeaders();
+            }
+        };
+
+        volleyClient.addToRequestQueue(request, TAG);
+    }
+
     private void validateAndBook() {
         // Clear previous errors
         clearFieldErrors();
@@ -292,6 +332,15 @@ public class BookingActivity extends AppCompatActivity {
         if (location.isEmpty()) {
             locationInputLayout.setError("Location is required");
             locationInputLayout.setErrorEnabled(true);
+            return;
+        }
+
+        // Check wallet balance
+        if (walletBalance < serviceServicePrice) {
+            Toast.makeText(this,
+                    String.format(Locale.US, "Insufficient wallet balance. Required: $%.2f, Available: $%.2f",
+                            serviceServicePrice, walletBalance),
+                    Toast.LENGTH_LONG).show();
             return;
         }
 
