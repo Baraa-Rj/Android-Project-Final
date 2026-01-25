@@ -44,8 +44,15 @@ public class EmployeeBookingViewModel extends AndroidViewModel {
             public void onResponse(Call<List<Booking>> call, Response<List<Booking>> response) {
                 loadingLiveData.setValue(false);
                 if (response.isSuccessful() && response.body() != null) {
-                    bookingsLiveData.setValue(response.body());
+                    List<Booking> bookings = response.body();
+                    Log.d(TAG, "Loaded " + bookings.size() + " bookings for employee");
+                    for (Booking b : bookings) {
+                        Log.d(TAG, "Booking ID: " + b.getId() + ", Service: " + b.getServiceName() +
+                              ", Scheduled: " + b.getScheduledTime() + ", Status: " + b.getStatus());
+                    }
+                    bookingsLiveData.setValue(bookings);
                 } else {
+                    Log.e(TAG, "Failed to load bookings. Response code: " + response.code());
                     errorLiveData.setValue("Failed to load bookings");
                 }
             }

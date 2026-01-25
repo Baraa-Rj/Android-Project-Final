@@ -70,6 +70,7 @@ public class TeamMemberAdapter extends RecyclerView.Adapter<TeamMemberAdapter.Me
             String roleText = user.getRole() != null ? user.getRole().toString() : "Employee";
             memberRole.setText(roleText);
 
+            removeMemberButton.setVisibility(View.VISIBLE);
             removeMemberButton.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onRemoveMember(user);

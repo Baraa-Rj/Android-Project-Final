@@ -23,6 +23,7 @@ import com.example.myapplication.data.models.Booking;
 import com.example.myapplication.data.models.BookingRequest;
 import com.example.myapplication.data.models.RescheduleRequest;
 import com.example.myapplication.data.models.Team;
+import com.example.myapplication.data.models.TeamResponse;
 
 public interface ApiService {
     @POST("/api/auth/login")
@@ -78,6 +79,9 @@ public interface ApiService {
     Call<Booking> assignTeamToBooking(@Path("id") int id, @Query("team_id") int teamId);
 
     // Teams
+    @GET("api/teams/my-team")
+    Call<TeamResponse> getMyTeam();
+
     @GET("api/teams")
     Call<List<Team>> getTeams();
 

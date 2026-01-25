@@ -61,12 +61,13 @@ public class EmployeeHomeFragment extends Fragment {
     private void observeViewModel() {
         viewModel.getBookingsLiveData().observe(getViewLifecycleOwner(), bookings -> {
             if (bookings != null) {
-                List<Booking> todayBookings = filterTodayBookings(bookings);
-                adapter.setBookings(todayBookings);
+                List<Booking> upcomingBookings = filterUpcomingBookings(bookings);
+                adapter.setBookings(upcomingBookings);
 
-                if (todayBookings.isEmpty()) {
+                if (upcomingBookings.isEmpty()) {
                     recyclerView.setVisibility(View.GONE);
                     emptyStateText.setVisibility(View.VISIBLE);
+                    emptyStateText.setText("No upcoming bookings");
                 } else {
                     recyclerView.setVisibility(View.VISIBLE);
                     emptyStateText.setVisibility(View.GONE);
@@ -87,19 +88,20 @@ public class EmployeeHomeFragment extends Fragment {
         });
     }
 
-    private List<Booking> filterTodayBookings(List<Booking> bookings) {
-        List<Booking> todayBookings = new ArrayList<>();
+    private List<Booking> filterUpcomingBookings(List<Booking> bookings) {
+        List<Booking> upcomingBookings = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String today = dateFormat.format(new Date());
 
         for (Booking booking : bookings) {
             String bookingDate = booking.getScheduledTime();
-            if (bookingDate != null && bookingDate.startsWith(today)) {
-                todayBookings.add(booking);
+            // Show bookings scheduled for today or future dates
+            if (bookingDate != null && bookingDate.compareTo(today) >= 0) {
+                upcomingBookings.add(booking);
             }
         }
 
-        return todayBookings;
+        return upcomingBookings;
     }
 
     private void onBookingClick(Booking booking) {

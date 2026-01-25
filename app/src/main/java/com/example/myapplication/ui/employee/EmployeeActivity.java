@@ -33,6 +33,8 @@ public class EmployeeActivity extends AppCompatActivity {
                 selectedFragment = new EmployeeHomeFragment();
             } else if (itemId == R.id.nav_employee_bookings) {
                 selectedFragment = new EmployeeBookingsFragment();
+            } else if (itemId == R.id.nav_employee_team) {
+                selectedFragment = new EmployeeTeamFragment();
             } else if (itemId == R.id.nav_employee_profile) {
                 selectedFragment = new EmployeeProfileFragment();
             }
