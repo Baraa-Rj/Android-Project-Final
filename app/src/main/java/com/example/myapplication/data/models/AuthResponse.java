@@ -1,5 +1,7 @@
 package com.example.myapplication.data.models;
 
+import java.io.Serial;
+
 import com.google.gson.annotations.SerializedName;
 
 public class AuthResponse {
@@ -8,6 +10,8 @@ public class AuthResponse {
     private String email;
     private String phone;
     private String role;
+    @SerializedName("team_id")
+    private int teamId;
 
     @SerializedName("access_token")
     private String token;
@@ -38,6 +42,10 @@ public class AuthResponse {
         return role;
     }
 
+    public int getTeamId() {
+        return teamId;
+    }
+
     public String getToken() {
         return token;
     }
@@ -46,7 +54,10 @@ public class AuthResponse {
         return tokenType;
     }
 
-    // Setters for testing
+    public void setTeamId(int teamId) {
+        this.teamId = teamId;
+    }
+
     public void setId(int id) {
         this.id = id;
     }
