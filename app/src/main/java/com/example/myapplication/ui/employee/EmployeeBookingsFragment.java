@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.myapplication.R;
 import com.example.myapplication.data.models.Booking;
 import com.example.myapplication.ui.employee.adapter.EmployeeBookingAdapter;
+import com.example.myapplication.ui.employee.viewmodel.EmployeeBookingViewModel;
 
 public class EmployeeBookingsFragment extends Fragment {
     private static final String TAG = "EmployeeBookingsFragment";
