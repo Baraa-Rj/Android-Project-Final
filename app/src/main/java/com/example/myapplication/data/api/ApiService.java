@@ -22,6 +22,7 @@ import com.example.myapplication.data.models.CarRequest;
 import com.example.myapplication.data.models.Booking;
 import com.example.myapplication.data.models.BookingRequest;
 import com.example.myapplication.data.models.RescheduleRequest;
+import com.example.myapplication.data.models.Team;
 
 public interface ApiService {
     @POST("/api/auth/login")
@@ -63,4 +64,27 @@ public interface ApiService {
 
     @PATCH("api/bookings/{id}/status")
     Call<Booking> updateBookingStatus(@Path("id") int id, @Query("status") String status);
+
+    @PATCH("api/bookings/{id}/team")
+    Call<Booking> assignTeamToBooking(@Path("id") int id, @Query("team_id") int teamId);
+
+    // Teams
+    @GET("api/teams")
+    Call<List<Team>> getTeams();
+
+    @POST("api/teams")
+    Call<Team> createTeam(@Body Team team);
+
+    @GET("api/teams/{id}/members")
+    Call<List<User>> getTeamMembers(@Path("id") int teamId);
+
+    @POST("api/teams/{id}/members")
+    Call<Void> addTeamMember(@Path("id") int teamId, @Body User user);
+
+    @DELETE("api/teams/{teamId}/members/{userId}")
+    Call<Void> removeTeamMember(@Path("teamId") int teamId, @Path("userId") int userId);
+
+    // Users
+    @GET("api/users")
+    Call<List<User>> getUsers();
 }
