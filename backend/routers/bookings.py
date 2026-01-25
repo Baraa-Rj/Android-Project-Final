@@ -464,3 +464,33 @@ def update_booking_status(
         cursor.close()
         db.close()
     return {"id": booking_id, "status": status}
+
+
+@router.patch("/{booking_id}/team")
+def assign_team_to_booking(
+    booking_id: int,
+    team_id: int,
+    current_user: CurrentUser = Depends(get_manager),
+):
+    """Assign a team to a booking - Requires manager role"""
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            "UPDATE bookings SET team_id = %s WHERE id = %s",
+            (team_id, booking_id),
+        )
+        db.commit()
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Booking not found")
+
+        # Get the updated booking
+        cursor.execute("SELECT * FROM bookings WHERE id = %s", (booking_id,))
+        booking = cursor.fetchone()
+        return booking
+    except mysql.connector.Error as err:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {err}")
+    finally:
+        cursor.close()
+        db.close()
