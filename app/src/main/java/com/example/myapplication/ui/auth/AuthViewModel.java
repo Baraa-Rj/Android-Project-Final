@@ -149,7 +149,8 @@ public class AuthViewModel extends AndroidViewModel {
                             authResponse.getToken(),
                             authResponse.getId(),
                             authResponse.getEmail(),
-                            authResponse.getRole());
+                            authResponse.getRole(),
+                            authResponse.getTeamId());
                     authResponseLiveData.setValue(authResponse);
                 } else {
                     String errorMsg = parseErrorMessage(response);
@@ -189,7 +190,8 @@ public class AuthViewModel extends AndroidViewModel {
                             authResponse.getToken(),
                             authResponse.getId(),
                             authResponse.getEmail(),
-                            authResponse.getRole());
+                            authResponse.getRole(),
+                            authResponse.getTeamId());
                     authResponseLiveData.setValue(authResponse);
                 } else {
                     String errorMsg = parseErrorMessage(response);
