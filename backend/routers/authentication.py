@@ -46,6 +46,16 @@ def register(user: UserRegister):
         db.commit()
         user_id = cursor.lastrowid
 
+        # Get team_id if user is employee
+        team_id = None
+        if user.role == "employee":
+            cursor.execute(
+                "SELECT team_id FROM team_members WHERE user_id = %s", (user_id,)
+            )
+            team_result = cursor.fetchone()
+            if team_result:
+                team_id = team_result["team_id"]
+
         # Create access token
         access_token = create_access_token(
             data={"sub": str(user_id), "email": user.email, "role": user.role}
@@ -57,6 +67,7 @@ def register(user: UserRegister):
             "email": user.email,
             "phone": user.phone,
             "role": user.role,
+            "team_id": team_id,
             "access_token": access_token,
             "token_type": "bearer",
         }
@@ -99,6 +110,16 @@ def login(user: UserLogin):
                 detail="Incorrect email or password",
             )
 
+        # Get team_id if user is employee
+        team_id = None
+        if db_user["role"] == "employee":
+            cursor.execute(
+                "SELECT team_id FROM team_members WHERE user_id = %s", (db_user["id"],)
+            )
+            team_result = cursor.fetchone()
+            if team_result:
+                team_id = team_result["team_id"]
+
         # Create access token
         access_token = create_access_token(
             data={
@@ -114,6 +135,7 @@ def login(user: UserLogin):
             "email": db_user["email"],
             "phone": db_user["phone"],
             "role": db_user["role"],
+            "team_id": team_id,
             "access_token": access_token,
             "token_type": "bearer",
         }

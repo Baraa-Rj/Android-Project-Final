@@ -21,10 +21,10 @@ def check_booking_ownership(booking_id: int, current_user: CurrentUser):
             booking = cursor.fetchone()
             if not booking:
                 raise HTTPException(status_code=404, detail="Booking not found")
-            if booking["user_id"] != current_user.id: # type: ignore[index]
+            if booking["user_id"] != current_user.id:  # type: ignore[index]
                 raise HTTPException(
                     status_code=403,
-                    detail="Access denied. You can only access your own bookings"
+                    detail="Access denied. You can only access your own bookings",
                 )
         finally:
             cursor.close()
@@ -36,7 +36,8 @@ def get_bookings(current_user: CurrentUser = Depends(get_current_user)):
     """
     Get all bookings
     - Customers: Only see their own bookings
-    - Employees/Managers: See all bookings
+    - Employees: See bookings assigned to their team
+    - Managers: See all bookings
     """
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
@@ -45,10 +46,25 @@ def get_bookings(current_user: CurrentUser = Depends(get_current_user)):
         # Customers can only see their own bookings
         cursor.execute(
             "SELECT * FROM bookings WHERE user_id = %s ORDER BY scheduled_time DESC",
-            (current_user.id,)
+            (current_user.id,),
         )
+    elif current_user.role == "employee":
+        # Employees see only bookings assigned to their team
+        cursor.execute(
+            "SELECT team_id FROM team_members WHERE user_id = %s", (current_user.id,)
+        )
+        team_result = cursor.fetchone()
+
+        if team_result and team_result["team_id"]:
+            cursor.execute(
+                "SELECT * FROM bookings WHERE team_id = %s ORDER BY scheduled_time DESC",
+                (team_result["team_id"],),
+            )
+        else:
+            # Employee not assigned to any team - return empty list
+            cursor.execute("SELECT * FROM bookings WHERE 1=0")
     else:
-        # Employees and managers see all bookings
+        # Managers see all bookings
         cursor.execute("SELECT * FROM bookings ORDER BY scheduled_time DESC")
 
     bookings = cursor.fetchall()
@@ -59,15 +75,14 @@ def get_bookings(current_user: CurrentUser = Depends(get_current_user)):
 
 @router.get("/user/{user_id}")
 def get_user_bookings(
-    user_id: int,
-    current_user: CurrentUser = Depends(get_current_user)
+    user_id: int, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Get bookings for a user - Customers can only access their own bookings"""
     # Customers can only access their own bookings
     if current_user.role == "customer" and current_user.id != user_id:
         raise HTTPException(
             status_code=403,
-            detail="Access denied. You can only access your own bookings"
+            detail="Access denied. You can only access your own bookings",
         )
 
     db = get_db_connection()
@@ -84,8 +99,7 @@ def get_user_bookings(
 
 @router.post("")
 def create_booking(
-    booking: BookingCreate,
-    current_user: CurrentUser = Depends(get_current_user)
+    booking: BookingCreate, current_user: CurrentUser = Depends(get_current_user)
 ):
     """
     Create a new booking
@@ -96,7 +110,7 @@ def create_booking(
     if current_user.role == "customer" and booking.user_id != current_user.id:
         raise HTTPException(
             status_code=403,
-            detail="Access denied. You can only create bookings for yourself"
+            detail="Access denied. You can only create bookings for yourself",
         )
 
     db = get_db_connection()
@@ -132,10 +146,7 @@ def create_booking(
 
 
 @router.get("/{booking_id}")
-def get_booking(
-    booking_id: int,
-    current_user: CurrentUser = Depends(get_current_user)
-):
+def get_booking(booking_id: int, current_user: CurrentUser = Depends(get_current_user)):
     """Get booking by ID - Customers can only access their own bookings"""
     check_booking_ownership(booking_id, current_user)
 
@@ -154,7 +165,7 @@ def get_booking(
 def edit_booking(
     booking_id: int,
     booking: BookingCreate,
-    current_user: CurrentUser = Depends(get_current_user)
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     """Update booking by ID - Customers can only update their own bookings"""
     check_booking_ownership(booking_id, current_user)
@@ -195,8 +206,7 @@ def edit_booking(
 
 @router.delete("/{booking_id}")
 def delete_booking(
-    booking_id: int,
-    current_user: CurrentUser = Depends(get_current_user)
+    booking_id: int, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Delete booking by ID - Customers can only delete their own bookings"""
     check_booking_ownership(booking_id, current_user)
@@ -217,74 +227,9 @@ def delete_booking(
     return {"detail": "Booking deleted successfully"}
 
 
-@router.patch("/{booking_id}/status")
-def update_booking_status(
-    booking_id: int,
-    body: dict,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
-):
-    """Update booking status - Requires employee or manager role"""
-
-    # Validate status
-    valid_statuses = ["pending", "assigned", "in_progress", "completed", "cancelled"]
-    status = body.get("status")
-
-    if not status:
-        raise HTTPException(status_code=400, detail="Status is required")
-
-    if status not in valid_statuses:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
-        )
-
-    # Business rule: assigned status requires team_id
-    team_id = body.get("team_id")
-    vehicle_id = body.get("vehicle_id")
-
-    if status == "assigned" and not team_id:
-        raise HTTPException(
-            status_code=400,
-            detail="team_id is required when assigning a booking"
-        )
-
-    db = get_db_connection()
-    cursor = db.cursor()
-    try:
-        # Build query based on status
-        if status == "completed":
-            cursor.execute(
-                "UPDATE bookings SET status = %s, completed_at = NOW() WHERE id = %s",
-                (status, booking_id),
-            )
-        elif status == "assigned":
-            cursor.execute(
-                "UPDATE bookings SET status = %s, team_id = %s, vehicle_id = %s WHERE id = %s",
-                (status, team_id, vehicle_id, booking_id),
-            )
-        else:
-            cursor.execute(
-                "UPDATE bookings SET status = %s WHERE id = %s",
-                (status, booking_id),
-            )
-
-        db.commit()
-        if cursor.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Booking not found")
-    except mysql.connector.Error as err:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error: {err}")
-    finally:
-        cursor.close()
-        db.close()
-
-    return {"id": booking_id, "status": status, "message": f"Booking status updated to {status}"}
-
-
 @router.get("/service/{service_id}")
 def get_bookings_by_service(
-    service_id: int,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    service_id: int, current_user: CurrentUser = Depends(get_employee_or_manager)
 ):
     """Get bookings by service - Requires employee or manager role"""
     db = get_db_connection()
@@ -301,8 +246,7 @@ def get_bookings_by_service(
 
 @router.get("/team/{team_id}")
 def get_bookings_by_team(
-    team_id: int,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    team_id: int, current_user: CurrentUser = Depends(get_employee_or_manager)
 ):
     """Get bookings by team - Requires employee or manager role"""
     db = get_db_connection()
@@ -319,8 +263,7 @@ def get_bookings_by_team(
 
 @router.get("/vehicle/{vehicle_id}")
 def get_bookings_by_vehicle(
-    vehicle_id: int,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    vehicle_id: int, current_user: CurrentUser = Depends(get_employee_or_manager)
 ):
     """Get bookings by vehicle - Requires employee or manager role"""
     db = get_db_connection()
@@ -337,8 +280,7 @@ def get_bookings_by_vehicle(
 
 @router.get("/car/{car_id}")
 def get_bookings_by_car(
-    car_id: int,
-    current_user: CurrentUser = Depends(get_current_user)
+    car_id: int, current_user: CurrentUser = Depends(get_current_user)
 ):
     """
     Get bookings by car
@@ -354,10 +296,10 @@ def get_bookings_by_car(
             car = cursor.fetchone()
             if not car:
                 raise HTTPException(status_code=404, detail="Car not found")
-            if car["user_id"] != current_user.id: # type: ignore[index]
+            if car["user_id"] != current_user.id:  # type: ignore[index]
                 raise HTTPException(
                     status_code=403,
-                    detail="Access denied. You can only access bookings for your own cars"
+                    detail="Access denied. You can only access bookings for your own cars",
                 )
         finally:
             cursor.close()
@@ -377,8 +319,7 @@ def get_bookings_by_car(
 
 @router.get("/scheduled/{scheduled_time}")
 def get_bookings_by_scheduled_time(
-    scheduled_time: str,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    scheduled_time: str, current_user: CurrentUser = Depends(get_employee_or_manager)
 ):
     """Get bookings by scheduled time - Requires employee or manager role"""
     db = get_db_connection()
@@ -395,8 +336,7 @@ def get_bookings_by_scheduled_time(
 
 @router.get("/location/{location}")
 def get_bookings_by_location(
-    location: str,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    location: str, current_user: CurrentUser = Depends(get_employee_or_manager)
 ):
     """Get bookings by location - Requires employee or manager role"""
     db = get_db_connection()
@@ -413,8 +353,7 @@ def get_bookings_by_location(
 
 @router.get("/total_price/{total_price}")
 def get_bookings_by_total_price(
-    total_price: float,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    total_price: float, current_user: CurrentUser = Depends(get_employee_or_manager)
 ):
     """Get bookings by total price - Requires employee or manager role"""
     db = get_db_connection()
@@ -431,8 +370,7 @@ def get_bookings_by_total_price(
 
 @router.get("/notes/{notes}")
 def get_bookings_by_notes(
-    notes: str,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    notes: str, current_user: CurrentUser = Depends(get_employee_or_manager)
 ):
     """Get bookings by notes - Requires employee or manager role"""
     db = get_db_connection()
@@ -449,9 +387,7 @@ def get_bookings_by_notes(
 
 @router.get("/all/{field}/{value}")
 def get_bookings_by_field(
-    field: str,
-    value: str,
-    current_user: CurrentUser = Depends(get_employee_or_manager)
+    field: str, value: str, current_user: CurrentUser = Depends(get_employee_or_manager)
 ):
     """Get bookings by field - Requires employee or manager role"""
     valid_fields = {
@@ -476,3 +412,55 @@ def get_bookings_by_field(
     cursor.close()
     db.close()
     return bookings
+
+
+@router.patch("/{booking_id}/notes")
+def update_booking_notes(
+    booking_id: int, notes: str, current_user: CurrentUser = Depends(get_current_user)
+):
+    """Update only the notes of a booking - Customers can only update their own bookings"""
+    check_booking_ownership(booking_id, current_user)
+
+    db = get_db_connection()
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            "UPDATE bookings SET notes = %s WHERE id = %s",
+            (notes, booking_id),
+        )
+        db.commit()
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Booking not found")
+    except mysql.connector.Error as err:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {err}")
+    finally:
+        cursor.close()
+        db.close()
+    return {"id": booking_id, "notes": notes}
+
+
+@router.patch("/{booking_id}/status")
+def update_booking_status(
+    booking_id: int,
+    status: str,
+    current_user: CurrentUser = Depends(get_employee_or_manager),
+):
+    """Update only the status of a booking - Requires employee or manager role"""
+    db = get_db_connection()
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            "UPDATE bookings SET status = %s WHERE id = %s",
+            (status, booking_id),
+        )
+        db.commit()
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Booking not found")
+    except mysql.connector.Error as err:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {err}")
+    finally:
+        cursor.close()
+        db.close()
+    return {"id": booking_id, "status": status}
