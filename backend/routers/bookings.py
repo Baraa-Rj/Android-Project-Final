@@ -42,10 +42,21 @@ def get_bookings(current_user: CurrentUser = Depends(get_current_user)):
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
 
+    # SQL query with JOIN to get service_name and car model
+    base_query = """
+        SELECT
+            b.*,
+            s.name as service_name,
+            CONCAT(COALESCE(c.year, ''), ' ', c.model) as car_model
+        FROM bookings b
+        LEFT JOIN services s ON b.service_id = s.id
+        LEFT JOIN cars c ON b.car_id = c.id
+    """
+
     if current_user.role == "customer":
         # Customers can only see their own bookings
         cursor.execute(
-            "SELECT * FROM bookings WHERE user_id = %s ORDER BY scheduled_time DESC",
+            base_query + " WHERE b.user_id = %s ORDER BY b.scheduled_time DESC",
             (current_user.id,),
         )
     elif current_user.role == "employee":
@@ -57,15 +68,15 @@ def get_bookings(current_user: CurrentUser = Depends(get_current_user)):
 
         if team_result and team_result["team_id"]:
             cursor.execute(
-                "SELECT * FROM bookings WHERE team_id = %s ORDER BY scheduled_time DESC",
+                base_query + " WHERE b.team_id = %s ORDER BY b.scheduled_time DESC",
                 (team_result["team_id"],),
             )
         else:
             # Employee not assigned to any team - return empty list
-            cursor.execute("SELECT * FROM bookings WHERE 1=0")
+            cursor.execute(base_query + " WHERE 1=0")
     else:
         # Managers see all bookings
-        cursor.execute("SELECT * FROM bookings ORDER BY scheduled_time DESC")
+        cursor.execute(base_query + " ORDER BY b.scheduled_time DESC")
 
     bookings = cursor.fetchall()
     cursor.close()

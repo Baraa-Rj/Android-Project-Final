@@ -34,7 +34,10 @@ public class Booking {
     private String notes;
 
     // For display purposes (joined data)
+    @SerializedName("service_name")
     private String serviceName;
+
+    @SerializedName("car_model")
     private String carModel;
 
     // Getters

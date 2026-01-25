@@ -14,6 +14,7 @@ import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
 import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.myapplication.R;
 import com.example.myapplication.data.api.VolleyClient;
@@ -34,6 +35,9 @@ public class CustomerHomeFragment extends Fragment {
     private CardView bookNowCard;
     private CardView myCarsCard;
     private CardView upcomingBookingCard;
+    private TextView upcomingServiceName;
+    private TextView upcomingBookingDate;
+    private TextView upcomingBookingStatus;
     private TokenManager tokenManager;
     private VolleyClient volleyClient;
 
@@ -67,6 +71,9 @@ public class CustomerHomeFragment extends Fragment {
     bookNowCard = view.findViewById(R.id.bookNowCard);
     myCarsCard = view.findViewById(R.id.myCarsCard);
     upcomingBookingCard = view.findViewById(R.id.upcomingBookingCard);
+    upcomingServiceName = view.findViewById(R.id.upcomingServiceName);
+    upcomingBookingDate = view.findViewById(R.id.upcomingBookingDate);
+    upcomingBookingStatus = view.findViewById(R.id.upcomingBookingStatus);
     }
     private void setupUserInfo() {
         String userEmail = tokenManager.getUserEmail();
@@ -79,8 +86,9 @@ public class CustomerHomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Refresh wallet balance when returning to this fragment
+        // Refresh wallet balance and upcoming booking when returning to this fragment
         loadWalletBalance();
+        loadUpcomingBooking();
     }
 
     /**
@@ -116,6 +124,80 @@ public class CustomerHomeFragment extends Fragment {
 
         volleyClient.addToRequestQueue(request, TAG);
     }
+
+    /**
+     * Fetch upcoming booking from API using Volley
+     */
+    private void loadUpcomingBooking() {
+        String url = VolleyClient.BASE_URL + "/api/bookings";
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        if (response.length() > 0) {
+                            // Get the first booking (most recent)
+                            org.json.JSONObject booking = response.getJSONObject(0);
+
+                            String serviceName = booking.optString("service_name", "Service");
+                            String scheduledTime = booking.optString("scheduled_time", "");
+                            String status = booking.optString("status", "pending");
+
+                            // Display booking info
+                            upcomingServiceName.setText(serviceName);
+                            upcomingBookingDate.setText(formatBookingDate(scheduledTime));
+                            upcomingBookingStatus.setText(status.toUpperCase(Locale.US));
+                            upcomingBookingStatus.setVisibility(View.VISIBLE);
+
+                            Log.d(TAG, "Upcoming booking loaded: " + serviceName);
+                        } else {
+                            // No bookings found
+                            upcomingServiceName.setText("No upcoming bookings");
+                            upcomingBookingDate.setText("Book your first wash!");
+                            upcomingBookingStatus.setVisibility(View.GONE);
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing booking: " + e.getMessage());
+                        showDefaultBookingState();
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Error loading booking: " + (error.getMessage() != null ? error.getMessage() : "Unknown error"));
+                    showDefaultBookingState();
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return volleyClient.getAuthHeaders();
+            }
+        };
+
+        volleyClient.addToRequestQueue(request, TAG);
+    }
+
+    private String formatBookingDate(String scheduledTime) {
+        if (scheduledTime == null || scheduledTime.isEmpty()) {
+            return "Date not set";
+        }
+        // Format: "2024-01-25T14:30:00" -> "Jan 25, 2:30 PM"
+        try {
+            java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+            java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("MMM dd, h:mm a", Locale.US);
+            java.util.Date date = inputFormat.parse(scheduledTime);
+            return date != null ? outputFormat.format(date) : scheduledTime;
+        } catch (Exception e) {
+            return scheduledTime;
+        }
+    }
+
+    private void showDefaultBookingState() {
+        upcomingServiceName.setText("No upcoming bookings");
+        upcomingBookingDate.setText("Book your first wash!");
+        upcomingBookingStatus.setVisibility(View.GONE);
+    }
+
     private void setupClickListeners() {
         walletCard.setOnClickListener(v -> {
             Intent intent = new Intent(requireContext(), WalletActivity.class);
