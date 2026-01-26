@@ -100,7 +100,13 @@ public interface ApiService {
     // Users
     @GET("api/users")
     Call<List<User>> getUsers();
-    
+
     @GET("api/users/{userId}")
     Call<User> getUser(@Path("userId") int userId);
+
+    @PUT("api/users/{userId}")
+    Call<User> updateUser(@Path("userId") int userId, @Body User user);
+
+    @DELETE("api/users/{userId}")
+    Call<Void> deleteUser(@Path("userId") int userId);
 }

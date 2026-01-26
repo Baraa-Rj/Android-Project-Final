@@ -137,13 +137,25 @@ public class CustomerHomeFragment extends Fragment {
                 null,
                 response -> {
                     try {
-                        if (response.length() > 0) {
-                            // Get the first booking (most recent)
-                            org.json.JSONObject booking = response.getJSONObject(0);
+                        // Filter to find first upcoming/unfinished booking
+                        org.json.JSONObject upcomingBooking = null;
 
-                            String serviceName = booking.optString("service_name", "Service");
-                            String scheduledTime = booking.optString("scheduled_time", "");
+                        for (int i = 0; i < response.length(); i++) {
+                            org.json.JSONObject booking = response.getJSONObject(i);
                             String status = booking.optString("status", "pending");
+
+                            // Skip completed and cancelled bookings
+                            if (!status.equalsIgnoreCase("completed") &&
+                                !status.equalsIgnoreCase("cancelled")) {
+                                upcomingBooking = booking;
+                                break;
+                            }
+                        }
+
+                        if (upcomingBooking != null) {
+                            String serviceName = upcomingBooking.optString("service_name", "Service");
+                            String scheduledTime = upcomingBooking.optString("scheduled_time", "");
+                            String status = upcomingBooking.optString("status", "pending");
 
                             // Display booking info
                             upcomingServiceName.setText(serviceName);
@@ -153,7 +165,7 @@ public class CustomerHomeFragment extends Fragment {
 
                             Log.d(TAG, "Upcoming booking loaded: " + serviceName);
                         } else {
-                            // No bookings found
+                            // No upcoming bookings found
                             upcomingServiceName.setText("No upcoming bookings");
                             upcomingBookingDate.setText("Book your first wash!");
                             upcomingBookingStatus.setVisibility(View.GONE);

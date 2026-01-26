@@ -15,7 +15,7 @@ def check_booking_ownership(booking_id: int, current_user: CurrentUser):
     """
     if current_user.role == "customer":
         db = get_db_connection()
-        cursor = db.cursor(dictionary=True)
+        cursor = db.cursor(dictionary=True, buffered=True)
         try:
             cursor.execute("SELECT user_id FROM bookings WHERE id = %s", (booking_id,))
             booking = cursor.fetchone()
@@ -40,7 +40,7 @@ def get_bookings(current_user: CurrentUser = Depends(get_current_user)):
     - Managers: See all bookings
     """
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
 
     # SQL query with JOIN to get service_name and car model
     base_query = """
@@ -97,7 +97,7 @@ def get_user_bookings(
         )
 
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute(
         "SELECT * FROM bookings WHERE user_id = %s ORDER BY scheduled_time DESC",
         (user_id,),
@@ -125,7 +125,7 @@ def create_booking(
         )
 
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     try:
         # Check wallet balance for customers
         if current_user.role == "customer":
@@ -199,7 +199,7 @@ def get_booking(booking_id: int, current_user: CurrentUser = Depends(get_current
     check_booking_ownership(booking_id, current_user)
 
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute("SELECT * FROM bookings WHERE id = %s", (booking_id,))
     booking = cursor.fetchone()
     cursor.close()
@@ -281,7 +281,7 @@ def get_bookings_by_service(
 ):
     """Get bookings by service - Requires employee or manager role"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute(
         "SELECT * FROM bookings WHERE service_id = %s ORDER BY scheduled_time DESC",
         (service_id,),
@@ -298,7 +298,7 @@ def get_bookings_by_team(
 ):
     """Get bookings by team - Requires employee or manager role"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute(
         "SELECT * FROM bookings WHERE team_id = %s ORDER BY scheduled_time DESC",
         (team_id,),
@@ -315,7 +315,7 @@ def get_bookings_by_vehicle(
 ):
     """Get bookings by vehicle - Requires employee or manager role"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute(
         "SELECT * FROM bookings WHERE vehicle_id = %s ORDER BY scheduled_time DESC",
         (vehicle_id,),
@@ -338,7 +338,7 @@ def get_bookings_by_car(
     # For customers, verify car ownership
     if current_user.role == "customer":
         db = get_db_connection()
-        cursor = db.cursor(dictionary=True)
+        cursor = db.cursor(dictionary=True, buffered=True)
         try:
             cursor.execute("SELECT user_id FROM cars WHERE id = %s", (car_id,))
             car = cursor.fetchone()
@@ -354,7 +354,7 @@ def get_bookings_by_car(
             db.close()
 
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute(
         "SELECT * FROM bookings WHERE car_id = %s ORDER BY scheduled_time DESC",
         (car_id,),
@@ -371,7 +371,7 @@ def get_bookings_by_scheduled_time(
 ):
     """Get bookings by scheduled time - Requires employee or manager role"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute(
         "SELECT * FROM bookings WHERE scheduled_time = %s ORDER BY scheduled_time DESC",
         (scheduled_time,),
@@ -388,7 +388,7 @@ def get_bookings_by_location(
 ):
     """Get bookings by location - Requires employee or manager role"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute(
         "SELECT * FROM bookings WHERE location = %s ORDER BY scheduled_time DESC",
         (location,),
@@ -405,7 +405,7 @@ def get_bookings_by_total_price(
 ):
     """Get bookings by total price - Requires employee or manager role"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute(
         "SELECT * FROM bookings WHERE total_price = %s ORDER BY scheduled_time DESC",
         (total_price,),
@@ -422,7 +422,7 @@ def get_bookings_by_notes(
 ):
     """Get bookings by notes - Requires employee or manager role"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute(
         "SELECT * FROM bookings WHERE notes = %s ORDER BY scheduled_time DESC",
         (notes,),
@@ -453,7 +453,7 @@ def get_bookings_by_field(
         raise HTTPException(status_code=400, detail="Invalid field parameter")
 
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     query = f"SELECT * FROM bookings WHERE {field} = %s ORDER BY scheduled_time DESC"
     cursor.execute(query, (value,))
     bookings = cursor.fetchall()
@@ -522,7 +522,7 @@ def assign_team_to_booking(
 ):
     """Assign a team to a booking - Requires manager role"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     try:
         cursor.execute(
             "UPDATE bookings SET team_id = %s WHERE id = %s",

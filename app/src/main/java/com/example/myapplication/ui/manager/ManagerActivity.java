@@ -22,6 +22,8 @@ public class ManagerActivity extends AppCompatActivity {
                 selectedFragment = new ManagerBookingsFragment();
             } else if (itemId == R.id.nav_teams) {
                 selectedFragment = new ManagerTeamsFragment();
+            } else if (itemId == R.id.nav_employees) {
+                selectedFragment = new ManagerEmployeesFragment();
             } else if (itemId == R.id.nav_services) {
                 selectedFragment = new ManagerServicesFragment();
             } else if (itemId == R.id.nav_profile) {

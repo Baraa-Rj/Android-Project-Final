@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/auth", tags=["authentication"])
 def register(user: UserRegister):
     """Register a new user"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
 
     try:
         # Check if user already exists
@@ -87,7 +87,7 @@ def register(user: UserRegister):
 def login(user: UserLogin):
     """Login with email and password"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
 
     try:
         # Find user by email
@@ -167,7 +167,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         )
 
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
 
     try:
         cursor.execute(

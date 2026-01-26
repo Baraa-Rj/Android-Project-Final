@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api/services", tags=["services"])
 def get_services(current_user: CurrentUser = Depends(get_current_user)):
     """Get all services - Available to all authenticated users"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute("SELECT * FROM services WHERE is_active = TRUE")
     services = cursor.fetchall()
     cursor.close()
@@ -21,7 +21,7 @@ def get_services(current_user: CurrentUser = Depends(get_current_user)):
 def get_active_services(current_user: CurrentUser = Depends(get_current_user)):
     """Get active services - Available to all authenticated users"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute("SELECT * FROM services WHERE is_active = TRUE")
     services = cursor.fetchall()
     cursor.close()
@@ -72,7 +72,7 @@ def get_service(
 ):
     """Get service by ID - Available to all authenticated users"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute("SELECT * FROM services WHERE id = %s", (service_id,))
     service = cursor.fetchone()
     cursor.close()

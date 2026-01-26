@@ -17,7 +17,7 @@ class DepositRequest(BaseModel):
 def get_wallet_balance(current_user: CurrentUser = Depends(get_current_user)):
     """Get user's wallet balance (calculated from transactions)"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
 
     try:
         # Calculate balance from transactions
@@ -53,7 +53,7 @@ def get_wallet_transactions(
 ):
     """Get user's transaction history"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
 
     try:
         cursor.execute("""
