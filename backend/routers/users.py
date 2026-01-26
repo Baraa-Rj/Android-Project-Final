@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/users", tags=["users"])
 def get_users(current_user: CurrentUser = Depends(get_employee_or_manager)):
     """Get all users - Requires employee or manager role"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute("SELECT id, name, email, phone, role FROM users")
     users = cursor.fetchall()
     cursor.close()
@@ -66,7 +66,7 @@ def get_user(
         )
 
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute("SELECT id, name, email, phone, role FROM users WHERE id = %s", (user_id,))
     user = cursor.fetchone()
     cursor.close()

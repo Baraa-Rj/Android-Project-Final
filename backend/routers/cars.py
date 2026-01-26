@@ -16,7 +16,7 @@ def check_car_ownership(car_id: int, current_user: CurrentUser):
     """
     if current_user.role == "customer":
         db = get_db_connection()
-        cursor = db.cursor(dictionary=True)
+        cursor = db.cursor(dictionary=True, buffered=True)
         try:
             cursor.execute("SELECT user_id FROM cars WHERE id = %s", (car_id,))
             car = cursor.fetchone()
@@ -40,7 +40,7 @@ def get_cars(current_user: CurrentUser = Depends(get_current_user)):
     - Employees/Managers: See all cars
     """
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
 
     if current_user.role == "customer":
         # Customers can only see their own cars
@@ -93,7 +93,7 @@ def get_car(car_id: int, current_user: CurrentUser = Depends(get_current_user)):
     check_car_ownership(car_id, current_user)
 
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute("SELECT * FROM cars WHERE id = %s", (car_id,))
     car = cursor.fetchone()
     cursor.close()
@@ -160,7 +160,7 @@ def get_cars_by_user(
         )
 
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute("SELECT * FROM cars WHERE user_id = %s", (user_id,))
     cars = cursor.fetchall()
     cursor.close()

@@ -97,6 +97,13 @@ public class LoginFragment extends Fragment {
                 }
             }
         });
+
+        authViewModel.getErrorLiveData().observe(getViewLifecycleOwner(), error -> {
+            if (error != null && !error.isEmpty()) {
+                Log.e(TAG, "Login error: " + error);
+                Toast.makeText(getContext(), error, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from database import get_db_connection
 from dependencies import (
     CurrentUser,
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/teams", tags=["teams"])
 def get_my_team(current_user: CurrentUser = Depends(get_current_user)):
     """Get current user's team and team members"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
 
     # Get employee's team
     cursor.execute(
@@ -54,7 +54,7 @@ def get_my_team(current_user: CurrentUser = Depends(get_current_user)):
 def get_teams(current_user: CurrentUser = Depends(get_current_user)):
     """Get all teams - Available to all authenticated users"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute("SELECT * FROM teams")
     teams = cursor.fetchall()
     cursor.close()
@@ -69,7 +69,7 @@ def get_team(
 ):
     """Get team by ID - Available to all authenticated users"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute("SELECT * FROM teams WHERE id = %s", (team_id,))
     team = cursor.fetchone()
     cursor.close()
@@ -84,7 +84,7 @@ def get_team_members(
 ):
     """Get team members - Available to all authenticated users"""
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True, buffered=True)
     cursor.execute(
         "SELECT users.id, users.name, users.email, users.phone, users.role FROM users JOIN team_members ON users.id = team_members.user_id WHERE team_members.team_id = %s",
         (team_id,),
@@ -156,15 +156,63 @@ def add_team_member(
 ):
     """Add member to team - Requires manager role"""
     db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute(
-        "INSERT INTO team_members (team_id, user_id) VALUES (%s, %s)",
-        (team_id, member["user_id"]),
-    )
-    db.commit()
-    cursor.close()
-    db.close()
-    return {"detail": "Member added successfully"}
+    cursor = db.cursor(dictionary=True, buffered=True)
+
+    try:
+        user_id = member["user_id"]
+
+        # Check if user exists and is an employee
+        cursor.execute(
+            "SELECT id, role, name FROM users WHERE id = %s",
+            (user_id,)
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        if user["role"] != "employee":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Only employees can be added to teams. {user['name']} is a {user['role']}."
+            )
+
+        # Check if employee is already in a team
+        cursor.execute(
+            "SELECT team_id FROM team_members WHERE user_id = %s",
+            (user_id,)
+        )
+        existing_team = cursor.fetchone()
+
+        if existing_team:
+            # Get the team name for better error message
+            cursor.execute(
+                "SELECT name FROM teams WHERE id = %s",
+                (existing_team["team_id"],)
+            )
+            team_info = cursor.fetchone()
+            team_name = team_info["name"] if team_info else f"Team #{existing_team['team_id']}"
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"{user['name']} is already assigned to {team_name}. Remove them from that team first."
+            )
+
+        # Add member to team
+        cursor.execute(
+            "INSERT INTO team_members (team_id, user_id) VALUES (%s, %s)",
+            (team_id, user_id),
+        )
+        db.commit()
+
+        return {"detail": "Member added successfully"}
+
+    finally:
+        cursor.close()
+        db.close()
 
 
 @router.delete("/{team_id}/members/{user_id}")

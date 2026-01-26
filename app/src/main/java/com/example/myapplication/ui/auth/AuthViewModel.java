@@ -12,6 +12,7 @@ import com.example.myapplication.data.models.RegisterRequest;
 import com.example.myapplication.data.repository.AuthRepo;
 import com.example.myapplication.utils.TokenManager;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -59,10 +60,25 @@ public class AuthViewModel extends AndroidViewModel {
         try {
             if (response.errorBody() != null) {
                 String errorBody = response.errorBody().string();
-                JSONObject errorJson = new JSONObject(errorBody);
+
+                // Try to parse as JSON, but handle plain text responses
+                JSONObject errorJson = null;
+                try {
+                    errorJson = new JSONObject(errorBody);
+                } catch (JSONException e) {
+                    // Not JSON - check if it's plain text error message
+                    if (errorBody != null && !errorBody.trim().isEmpty()) {
+                        Log.d(TAG, "parseErrorMessage: Plain text error: " + errorBody);
+                        // Return plain text for common server errors
+                        if (errorBody.contains("Internal Server Error")) {
+                            return "Server error. Please try again later.";
+                        }
+                        return errorBody.trim();
+                    }
+                }
 
                 // Check if it has a "detail" field
-                if (errorJson.has("detail")) {
+                if (errorJson != null && errorJson.has("detail")) {
                     Object detail = errorJson.get("detail");
 
                     // Handle array format (validation errors from FastAPI)

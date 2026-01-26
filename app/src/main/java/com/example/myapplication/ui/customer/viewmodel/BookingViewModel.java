@@ -14,6 +14,7 @@ import com.example.myapplication.data.models.ValidationError;
 import com.example.myapplication.data.repository.BookingRepository;
 import com.example.myapplication.utils.ValidationErrorParser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -77,9 +78,21 @@ public class BookingViewModel extends AndroidViewModel {
             public void onResponse(@NonNull Call<List<Booking>> call, @NonNull Response<List<Booking>> response) {
                 loadingLiveData.setValue(false);
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Booking> bookings = response.body();
-                    bookingsLiveData.setValue(bookings);
-                    Log.d(TAG, "Loaded " + bookings.size() + " bookings");
+                    List<Booking> allBookings = response.body();
+
+                    // Filter to show only upcoming/unfinished bookings (exclude completed and cancelled)
+                    List<Booking> upcomingBookings = new ArrayList<>();
+                    for (Booking booking : allBookings) {
+                        String status = booking.getStatus();
+                        if (status != null &&
+                            !status.equalsIgnoreCase("completed") &&
+                            !status.equalsIgnoreCase("cancelled")) {
+                            upcomingBookings.add(booking);
+                        }
+                    }
+
+                    bookingsLiveData.setValue(upcomingBookings);
+                    Log.d(TAG, "Loaded " + upcomingBookings.size() + " upcoming bookings (filtered from " + allBookings.size() + " total)");
                 } else {
                     Log.e(TAG, "Failed to load bookings: " + response.code());
                     ValidationError validationError = ValidationErrorParser.parseError(response);
