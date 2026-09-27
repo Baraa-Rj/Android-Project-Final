@@ -153,7 +153,7 @@ public class ManagerEmployeesFragment extends Fragment implements ManagerEmploye
     }
 
     private void createEmployee(String name, String email, String phone, String password) {
-        RegisterRequest newEmployee = new RegisterRequest(name, email, phone, password);
+        RegisterRequest newEmployee = new RegisterRequest(name, email, phone, password, "employee");
 
         progressBar.setVisibility(View.VISIBLE);
         RetrofitClient.getApiService(requireContext()).register(newEmployee).enqueue(new Callback<AuthResponse>() {

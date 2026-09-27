@@ -1,10 +1,18 @@
 package com.example.myapplication.data.models;
 
+import com.google.gson.annotations.SerializedName;
+
 public class RegisterRequest {
+    @SerializedName("name")
     private String name;
+    @SerializedName("email")
     private String email;
+    @SerializedName("phone")
     private String phone;
+    @SerializedName("password")
     private String password;
+    @SerializedName("role")
+    private String role;
 
     public RegisterRequest() {
     }
@@ -14,6 +22,15 @@ public class RegisterRequest {
         this.email = email;
         this.phone = phone;
         this.password = password;
+        this.role = "customer"; // Default role
+    }
+
+    public RegisterRequest(String name, String email, String phone, String password, String role) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.password = password;
+        this.role = role;
     }
 
     public String getName() {
@@ -46,6 +63,14 @@ public class RegisterRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public boolean isValid() {

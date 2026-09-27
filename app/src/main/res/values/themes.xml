@@ -68,6 +68,15 @@
 
     <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />
 
+    <!-- Splash Screen Theme -->
+    <style name="Theme.MyApplication.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/md_theme_light_primary</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="postSplashScreenTheme">@style/Theme.MyApplication</item>
+        <item name="android:windowBackground">@drawable/splash_background</item>
+    </style>
+
     <!-- Shape Appearances -->
     <style name="ShapeAppearance.MyApp.SmallComponent" parent="ShapeAppearance.Material3.SmallComponent">
         <item name="cornerFamily">rounded</item>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M100,100m-90,0a90,90 0,1 1,180 0a90,90 0,1 1,-180 0"/>
+
+    <!-- Car body -->
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M60,95 L70,75 L130,75 L140,95 Z"/>
+
+    <!-- Car roof -->
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M75,75 L85,60 L115,60 L125,75 Z"/>
+
+    <!-- Left window -->
+    <path
+        android:fillColor="#90CAF9"
+        android:pathData="M78,65 L87,65 L85,73 L80,73 Z"/>
+
+    <!-- Right window -->
+    <path
+        android:fillColor="#90CAF9"
+        android:pathData="M113,65 L122,65 L120,73 L115,73 Z"/>
+
+    <!-- Car bottom -->
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M55,95 L145,95 L145,110 L55,110 Z"/>
+
+    <!-- Left wheel -->
+    <path
+        android:fillColor="#424242"
+        android:pathData="M70,105m-15,0a15,15 0,1 1,30 0a15,15 0,1 1,-30 0"/>
+
+    <!-- Left wheel center -->
+    <path
+        android:fillColor="#757575"
+        android:pathData="M70,105m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0"/>
+
+    <!-- Right wheel -->
+    <path
+        android:fillColor="#424242"
+        android:pathData="M130,105m-15,0a15,15 0,1 1,30 0a15,15 0,1 1,-30 0"/>
+
+    <!-- Right wheel center -->
+    <path
+        android:fillColor="#757575"
+        android:pathData="M130,105m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0"/>
+
+    <!-- Wrench (service symbol) -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M155,130 L160,135 L150,145 L145,140 L150,135 L148,133 L143,138 L138,133 L143,128 L145,130 L155,120 L160,125 Z"/>
+
+    <!-- Wrench handle -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M138,133 L125,146 L120,141 L133,128 Z"/>
+</vector>
